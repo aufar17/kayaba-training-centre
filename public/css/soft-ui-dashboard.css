@@ -27,8 +27,8 @@
     --bs-light: #e9ecef;
     --bs-dark: #344767;
     --bs-white: #fff;
-    --bs-font-sans-serif: Open Sans;
-    --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --bs-font-sans-serif: Poppins, Open Sans;
+    --bs-font-monospace: Poppins, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
 }
 
@@ -85,6 +85,7 @@ h6,
     font-weight: 400;
     line-height: 1.2;
     color: #344767;
+    font-family: var(--bs-font-sans-serif);
 }
 
 h1,
@@ -2705,7 +2706,7 @@ progress {
 .form-control:focus {
     color: #495057;
     background-color: #fff;
-    border-color: #e293d3;
+    border-color: #ea0606;
     outline: 0;
     box-shadow: 0 0 0 2px #e9aede;
 }

@@ -143,10 +143,13 @@
                                 <b>Admin</b> <br> <em>MIS</em>
                             </div>
                             <hr class="mt-4">
-                            <a class="col-12 text-center mt-1" href="{{ route('login') }}">
-                                <i class="fa-solid fa-door-open text-danger"></i>
-                                <span class="text-danger mx-2">Log Out</span>
-                            </a>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button class="badge bg-danger border-0 py-2 col-12 text-center mt-1">
+                                    <i class="fa-solid fa-door-open text-white"></i>
+                                    <span class="text-white mx-2">Log Out</span>
+                                </button>
+                            </form>
                         </div>
                     </ul>
                 </li>

@@ -10,9 +10,9 @@ class MainController extends Controller
     {
         return view('index');
     }
-    public function shipping()
+    public function event()
     {
-        return view('shipping');
+        return view('event');
     }
 
     public function register()

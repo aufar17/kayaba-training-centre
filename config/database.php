@@ -47,7 +47,7 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            'database' => env('DB_DATABASE', 'checklist'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
@@ -62,12 +62,52 @@ return [
             ]) : [],
         ],
 
+        'mysql2' => [
+            'driver' => 'mysql',
+            'url' => env('DB2_URL'),
+            'host' => env('DB2_HOST', '127.0.0.1'),
+            'port' => env('DB2_PORT', '3306'),
+            'database' => env('DB2_DATABASE', 'lembur'),
+            'username' => env('DB2_USERNAME', 'root'),
+            'password' => env('DB2_PASSWORD', ''),
+            'unix_socket' => env('DB2_SOCKET', ''),
+            'charset' => env('DB2_CHARSET', 'utf8mb4'),
+            'collation' => env('DB2_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        'mysql3' => [
+            'driver' => 'mysql',
+            'url' => env('DB3_URL'),
+            'host' => env('DB3_HOST', '127.0.0.1'),
+            'port' => env('DB3_PORT', '3306'),
+            'database' => env('DB3_DATABASE', 'isd'),
+            'username' => env('DB3_USERNAME', 'root'),
+            'password' => env('DB3_PASSWORD', ''),
+            'unix_socket' => env('DB3_SOCKET', ''),
+            'charset' => env('DB3_CHARSET', 'utf8mb4'),
+            'collation' => env('DB3_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            'database' => env('DB_DATABASE', 'kayaba-training-centre'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
@@ -147,7 +187,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [
