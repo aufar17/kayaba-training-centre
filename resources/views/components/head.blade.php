@@ -25,6 +25,5 @@
     <link rel="stylesheet" href="{{ asset('css/animate.min.css') }}" />
 
     @livewireStyles
-
     {{ $slot }}
 </head>

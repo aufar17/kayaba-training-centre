@@ -14,7 +14,6 @@
 <script src="{{ asset('js/datatables.js') }}"></script>
 <script src="{{ asset('js/chart.js') }}"></script>
 <script src="{{ asset('js/chartjs-plugin-datalabels.js') }}"></script>
-<script src="{{ asset('js/hydrant-donut-chart.js') }}"></script>
 <script src="{{ asset('js/dataTables.bootstrap4.js') }}"></script>
 
 @livewireScripts

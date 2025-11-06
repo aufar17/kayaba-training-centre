@@ -17,6 +17,7 @@ Route::get('/', [MainController::class, 'index'])->name('index');
 Route::get('training', [MainController::class, 'training'])->name('training');
 Route::get('location', [MainController::class, 'location'])->name('location');
 Route::get('organizer', [MainController::class, 'organizer'])->name('organizer');
+Route::get('trainer', [MainController::class, 'trainer'])->name('trainer');
 Route::get('event', [MainController::class, 'event'])->name('event');
 
 

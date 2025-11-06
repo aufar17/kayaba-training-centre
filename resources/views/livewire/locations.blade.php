@@ -1,7 +1,7 @@
 <div>
     <x-card :icon="'fa-table'">
         @slot('title')
-        Training Location Data
+        Location Location Data
         @endslot
 
         @slot('body')
@@ -15,7 +15,7 @@
                     <tr>
                         <th class="text-center">No.</th>
                         <th class="text-center">Code</th>
-                        <th class="text-center">Training</th>
+                        <th class="text-center">Location</th>
                         <th class="text-center">Action</th>
                     </tr>
                 </thead>
@@ -39,9 +39,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">No data available</td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -52,7 +49,7 @@
             <div class="modal-dialog modal-dialog-centered modal-md">
                 <div class="modal-content border-0 shadow-md">
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white" id="newLocationModalLabel">Add New Training</h5>
+                        <h5 class="modal-title text-white" id="newLocationModalLabel">Add New Location</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
@@ -85,7 +82,7 @@
             <div class="modal-dialog modal-dialog-centered modal-md">
                 <div class="modal-content border-0 shadow-md">
                     <div class="modal-header bg-warning text-white">
-                        <h5 class="modal-title text-white" id="editLocationModalLabel">Edit Training</h5>
+                        <h5 class="modal-title text-white" id="editLocationModalLabel">Edit Location</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
@@ -123,7 +120,7 @@
                             aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Are you sure you want to delete this training?</p>
+                        <p>Are you sure you want to delete this Location?</p>
                     </div>
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
