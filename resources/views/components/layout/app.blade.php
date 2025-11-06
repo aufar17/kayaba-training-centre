@@ -36,10 +36,10 @@
         </x-navbar>
         <div class="container-fluid py-4 flex-grow-1">
             @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success text-white fw-bold">{{ session('success') }}</div>
             @endif
             @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
+            <div class="alert alert-danger text-white fw-bold">{{ session('error') }}</div>
             @endif
             <div class="row mt-4">
                 <div class="col-12">

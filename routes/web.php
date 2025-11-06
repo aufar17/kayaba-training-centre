@@ -15,6 +15,7 @@ Route::post('resend-otp', [OtpController::class, 'resendOtp'])->name('resend-otp
 //MAIN FEATURES
 Route::get('/', [MainController::class, 'index'])->name('index');
 Route::get('training', [MainController::class, 'training'])->name('training');
+Route::get('location', [MainController::class, 'location'])->name('location');
 Route::get('event', [MainController::class, 'event'])->name('event');
 
 

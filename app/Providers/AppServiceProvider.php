@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Interfaces\RepositoryInterface\LocationRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
+use App\Interfaces\ServiceInterface\LocationServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
+use App\Repositories\LocationRepository;
 use App\Repositories\TrainingRepository;
+use App\Services\LocationService;
 use App\Services\TrainingService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
@@ -18,9 +22,11 @@ class AppServiceProvider extends ServiceProvider
     {
         //Service
         $this->app->bind(TrainingServiceInterface::class, TrainingService::class);
+        $this->app->bind(LocationServiceInterface::class, LocationService::class);
 
         //Repository
         $this->app->bind(TrainingRepositoryInterface::class, TrainingRepository::class);
+        $this->app->bind(LocationRepositoryInterface::class, LocationRepository::class);
     }
 
     /**

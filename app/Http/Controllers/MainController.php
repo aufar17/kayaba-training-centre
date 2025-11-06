@@ -27,6 +27,13 @@ class MainController extends Controller
         ];
         return view('training', $data);
     }
+    public function location()
+    {
+        $data = [
+            'user' => $this->session(),
+        ];
+        return view('location', $data);
+    }
     public function event()
     {
         $data = [

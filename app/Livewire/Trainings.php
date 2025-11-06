@@ -5,7 +5,7 @@ namespace App\Livewire;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
 use Livewire\Component;
 
-class Training extends Component
+class Trainings extends Component
 {
     public $code;
     public $name;
@@ -25,7 +25,7 @@ class Training extends Component
         $data = [
             'trainings' => $this->getTraining(),
         ];
-        return view('livewire.training', $data);
+        return view('livewire.trainings', $data);
     }
 
     public function getTraining()
