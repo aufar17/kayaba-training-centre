@@ -20,6 +20,9 @@
                 Training
                 Location
             </x-navlink>
+            <x-navlink href="{{ route('organizer') }}" :active="request()->is('organizer') " icon="fa-location-dot">
+                Organizer
+            </x-navlink>
             <x-navlink href="{{ route('event') }}" :active="request()->is('event') " icon="fa-house">Event</x-navlink>
 
             <li class="nav-item mt-3">

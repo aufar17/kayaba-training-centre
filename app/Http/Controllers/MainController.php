@@ -34,6 +34,13 @@ class MainController extends Controller
         ];
         return view('location', $data);
     }
+    public function organizer()
+    {
+        $data = [
+            'user' => $this->session(),
+        ];
+        return view('organizer', $data);
+    }
     public function event()
     {
         $data = [

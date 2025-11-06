@@ -1,10 +1,10 @@
-<x-layout.app :user="$user" nav="Location">
-    <livewire:locations />
+<x-layout.app :user="$user" nav="Organizer">
+    <livewire:organizers />
 </x-layout.app>
 
 <script>
     $(document).ready(function () {
-        $('#location').DataTable({
+        $('#organizer').DataTable({
             responsive: true,
             autoWidth: false,
             paging: true,           

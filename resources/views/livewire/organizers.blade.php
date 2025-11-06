@@ -1,7 +1,7 @@
 <div>
     <x-card :icon="'fa-table'">
         @slot('title')
-        Training Location Data
+        Organizer Data
         @endslot
 
         @slot('body')
@@ -20,18 +20,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($locations as $loc)
+                    @forelse ($organizers as $organizer)
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
-                        <td class="text-center">{{ $loc->code }}</td>
-                        <td class="text-center">{{ $loc->name }}</td>
+                        <td class="text-center">{{ $organizer->code }}</td>
+                        <td class="text-center">{{ $organizer->name }}</td>
                         <td class="text-center">
-                            <button wire:click="edit({{ $loc->id }})" class="badge bg-warning border-0 shadow-xl"
+                            <button wire:click="edit({{ $organizer->id }})" class="badge bg-warning border-0 shadow-xl"
                                 data-bs-toggle="modal" data-bs-target="#editLocationModal">
                                 <i class="fa-solid fa-edit"></i>
                             </button>
 
-                            <button wire:click="confirmDelete({{ $loc->id }})"
+                            <button wire:click="confirmDelete({{ $organizer->id }})"
                                 class="badge bg-danger border-0 shadow-xl" data-bs-toggle="modal"
                                 data-bs-target="#deleteLocationModal">
                                 <i class="fa-solid fa-trash"></i>
