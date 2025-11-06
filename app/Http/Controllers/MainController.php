@@ -3,25 +3,35 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MainController extends Controller
 {
+
+    public function session()
+    {
+        $user = Auth::user();
+        return $user;
+    }
     public function index()
     {
-        return view('index');
+        $data = [
+            'user' => $this->session(),
+        ];
+        return view('index', $data);
+    }
+    public function training()
+    {
+        $data = [
+            'user' => $this->session(),
+        ];
+        return view('training', $data);
     }
     public function event()
     {
-        return view('event');
-    }
-
-    public function register()
-    {
-        return view('register');
-    }
-
-    public function login()
-    {
-        return view('login');
+        $data = [
+            'user' => $this->session(),
+        ];
+        return view('event', $data);
     }
 }

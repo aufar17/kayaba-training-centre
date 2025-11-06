@@ -14,6 +14,8 @@
     <div class="collapse navbar-collapse  w-auto  max-height-vh-100 h-100" id="sidenav-collapse-main">
         <ul class="navbar-nav">
             <x-navlink href="{{ route('index') }}" :active="request()->is('/') " icon="fa-house">Dashboard</x-navlink>
+            <x-navlink href="{{ route('training') }}" :active="request()->is('training') " icon="fa-house">Training
+            </x-navlink>
             <x-navlink href="{{ route('event') }}" :active="request()->is('event') " icon="fa-house">Event</x-navlink>
 
             <li class="nav-item mt-3">
