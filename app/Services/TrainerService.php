@@ -33,6 +33,7 @@ class TrainerService implements TrainerServiceInterface
         try {
             $trainer = Trainer::create([
                 'code' => $data['code'],
+                'npk' => $data['npk'],
                 'name' => $data['name'],
             ]);
 

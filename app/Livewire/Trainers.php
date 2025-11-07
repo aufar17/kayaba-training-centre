@@ -8,6 +8,7 @@ use Livewire\Component;
 class Trainers extends Component
 {
     public $code;
+    public $npk;
     public $name;
     public $trainerId;
 
@@ -37,6 +38,7 @@ class Trainers extends Component
         $this->service = app(TrainerServiceInterface::class);
         $data = [
             'code' => $this->code,
+            'npk' => $this->npk,
             'name' => $this->name,
         ];
 
@@ -63,6 +65,7 @@ class Trainers extends Component
         $this->service = app(TrainerServiceInterface::class);
         $data = [
             'code' => $this->code,
+            'npk' => $this->npk,
             'name' => $this->name,
         ];
 

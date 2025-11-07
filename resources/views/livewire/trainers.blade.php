@@ -15,6 +15,7 @@
                     <tr>
                         <th class="text-center">No.</th>
                         <th class="text-center">Code</th>
+                        <th class="text-center">NPK</th>
                         <th class="text-center">Trainer</th>
                         <th class="text-center">Action</th>
                     </tr>
@@ -24,6 +25,7 @@
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td class="text-center">{{ $trainer->code }}</td>
+                        <td class="text-center">{{ $trainer->npk ?? '-' }}</td>
                         <td class="text-center">{{ $trainer->name }}</td>
                         <td class="text-center">
                             <button wire:click="edit({{ $trainer->id }})" class="badge bg-warning border-0 shadow-xl"
@@ -62,6 +64,11 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="npk" class="form-label text-uppercase">npk</label>
+                                <input type="text" class="form-control" id="npk" wire:model="npk" placeholder="NPK">
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="name" class="form-label text-uppercase">Trainer</label>
                                 <input type="text" class="form-control" id="name" wire:model="name"
                                     placeholder="Trainer name" required>
@@ -91,6 +98,11 @@
                                 <label for="edit_code" class="form-label text-uppercase">Trainer Code</label>
                                 <input type="text" class="form-control" id="edit_code" wire:model="code"
                                     placeholder="Trainer code" oninput="this.value = this.value.toUpperCase()" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="npk" class="form-label text-uppercase">npk</label>
+                                <input type="text" class="form-control" id="npk" wire:model="npk" placeholder="NPK">
                             </div>
 
                             <div class="mb-3">
