@@ -14,6 +14,9 @@
     <div class="collapse navbar-collapse  w-auto  max-height-vh-100 h-100" id="sidenav-collapse-main">
         <ul class="navbar-nav">
             <x-navlink href="{{ route('index') }}" :active="request()->is('/') " icon="fa-house">Dashboard</x-navlink>
+            <li class="nav-item mt-3">
+                <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Training Data</h6>
+            </li>
             <x-navlink href="{{ route('training') }}" :active="request()->is('training') " icon="fa-list">Training List
             </x-navlink>
             <x-navlink href="{{ route('location') }}" :active="request()->is('location') " icon="fa-location-dot">
@@ -26,7 +29,12 @@
             <x-navlink href="{{ route('trainer') }}" :active="request()->is('trainer') " icon="fa-person">
                 Trainer
             </x-navlink>
-            <x-navlink href="{{ route('event') }}" :active="request()->is('event') " icon="fa-house">Event</x-navlink>
+
+            <li class="nav-item mt-3">
+                <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Main Event</h6>
+            </li>
+            <x-navlink href="{{ route('event') }}" :active="request()->is('event') " icon="fa-calendar-days">Event
+            </x-navlink>
 
             <li class="nav-item mt-3">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account pages</h6>

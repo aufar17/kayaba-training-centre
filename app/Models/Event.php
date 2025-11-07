@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Event extends Model
 {
@@ -10,13 +12,49 @@ class Event extends Model
     protected $table = 'events';
     protected $fillable = [
         'code',
-        'training_code',
-        'location',
-        'organizer',
-        'trainer',
+        'training_id',
+        'location_id',
+        'organizer_id',
+        'trainer_id',
         'start_date',
         'end_date',
         'start_time',
         'end_time',
     ];
+
+    public function trainings(): BelongsTo
+    {
+        return $this->belongsTo(Training::class, 'training_id', 'id');
+    }
+    public function locations(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'location_id', 'id');
+    }
+    public function organizers(): BelongsTo
+    {
+        return $this->belongsTo(Organizer::class, 'organizer_id', 'id');
+    }
+    public function trainers(): BelongsTo
+    {
+        return $this->belongsTo(Trainer::class, 'trainer_id', 'id');
+    }
+
+    // public function getStartDateAttribute($value)
+    // {
+    //     return Carbon::parse($value)->format('d M Y');
+    // }
+
+    // public function getEndDateAttribute($value)
+    // {
+    //     return Carbon::parse($value)->format('d M Y');
+    // }
+    public function getStartTimeAttribute($value)
+    {
+        return Carbon::parse($value)->format('H:i');
+    }
+
+    public function getEndTimeAttribute($value)
+    {
+        return Carbon::parse($value)->format('H:i');
+    }
 }

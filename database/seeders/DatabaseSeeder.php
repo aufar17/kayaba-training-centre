@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             TrainingSeeder::class,
+            LocationSeeder::class,
+            OrganizerSeeder::class,
+            TrainerSeeder::class,
         ]);
     }
 }

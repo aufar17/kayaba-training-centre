@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::connection('mysql')->create('events', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique()->index();
-            $table->string('training_code')->index();
-            $table->string('location')->index();
-            $table->string('organizer')->index();
-            $table->string('trainer')->index();
+            $table->string('training_id')->index();
+            $table->string('location_id')->index();
+            $table->string('organizer_id')->index();
+            $table->string('trainer_id')->index();
             $table->date('start_date');
             $table->date('end_date');
-            $table->date('start_time');
-            $table->date('end_time');
+            $table->time('start_time');
+            $table->time('end_time');
             $table->timestamps();
         });
     }

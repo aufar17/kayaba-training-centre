@@ -10,7 +10,7 @@
         </button>
 
         <div class="table-responsive">
-            <table id="location" class="table table-hover table-bordered table-striped">
+            <table id="trainer" class="table table-light table-hover table-bordered table-striped shadow-sm">
                 <thead>
                     <tr>
                         <th class="text-center">No.</th>
@@ -56,16 +56,15 @@
                     <form wire:submit.prevent="create">
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label for="code" class="form-label text-uppercase">Location Code</label>
+                                <label for="code" class="form-label text-uppercase">Trainer Code</label>
                                 <input type="text" class="form-control" id="code" wire:model="code"
-                                    placeholder="Location code" oninput="this.value = this.value.toUpperCase()"
-                                    required>
+                                    placeholder="Trainer code" oninput="this.value = this.value.toUpperCase()" required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="name" class="form-label text-uppercase">Location</label>
+                                <label for="name" class="form-label text-uppercase">Trainer</label>
                                 <input type="text" class="form-control" id="name" wire:model="name"
-                                    placeholder="Location name" required>
+                                    placeholder="Trainer name" required>
                             </div>
                         </div>
                         <div class="modal-footer border-0">
@@ -89,16 +88,15 @@
                     <form wire:submit.prevent="update">
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label for="edit_code" class="form-label text-uppercase">Location Code</label>
+                                <label for="edit_code" class="form-label text-uppercase">Trainer Code</label>
                                 <input type="text" class="form-control" id="edit_code" wire:model="code"
-                                    placeholder="Location code" oninput="this.value = this.value.toUpperCase()"
-                                    required>
+                                    placeholder="Trainer code" oninput="this.value = this.value.toUpperCase()" required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="edit_name" class="form-label text-uppercase">Location</label>
+                                <label for="edit_name" class="form-label text-uppercase">Trainer</label>
                                 <input type="text" class="form-control" id="edit_name" wire:model="name"
-                                    placeholder="Location name" required>
+                                    placeholder="Trainer name" required>
                             </div>
                         </div>
                         <div class="modal-footer border-0">

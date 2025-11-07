@@ -10,12 +10,13 @@
         </button>
 
         <div class="table-responsive">
-            <table id="training" class="table table-hover table-bordered table-striped">
+            <table id="training" class="table table-light table-hover table-bordered table-striped shadow-sm">
                 <thead>
                     <tr>
                         <th class="text-center">No.</th>
                         <th class="text-center">Code</th>
                         <th class="text-center">Training</th>
+                        <th class="text-center">Duration</th>
                         <th class="text-center">Action</th>
                     </tr>
                 </thead>
@@ -25,6 +26,10 @@
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td class="text-center">{{ $training->code }}</td>
                         <td class="text-center">{{ $training->name }}</td>
+                        <td class="text-center">{{ $training->day_duration ?? '-' }} Days / {{ $training->time_duration
+                            ?? '-' }}
+                            Hours
+                        </td>
                         <td class="text-center">
                             <button wire:click="edit({{ $training->id }})" class="badge bg-warning border-0 shadow-xl"
                                 data-bs-toggle="modal" data-bs-target="#editTrainingModal">
@@ -39,9 +44,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">No data available</td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>

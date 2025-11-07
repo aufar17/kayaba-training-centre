@@ -1,4 +1,4 @@
-<x-layout.app :user="$user" nav="Location">
+<x-layout.app :user="$user" nav="Training Location">
     <livewire:locations />
 </x-layout.app>
 

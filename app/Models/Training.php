@@ -13,5 +13,7 @@ class Training extends Model
         'name',
         'desc',
         'purpose',
+        'day_duration',
+        'time_duration',
     ];
 }

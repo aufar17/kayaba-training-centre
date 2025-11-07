@@ -1,7 +1,7 @@
 <div>
     <x-card :icon="'fa-table'">
         @slot('title')
-        Location Location Data
+        Location Data
         @endslot
 
         @slot('body')
@@ -10,7 +10,7 @@
         </button>
 
         <div class="table-responsive">
-            <table id="location" class="table table-hover table-bordered table-striped">
+            <table id="location" class="table table-light table-hover table-bordered table-striped shadow-sm">
                 <thead>
                     <tr>
                         <th class="text-center">No.</th>

@@ -28,6 +28,13 @@ class CTUser extends Authenticatable
         'no_telp',
         'email',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'pwd' => 'hashed',
+        ];
+    }
     public $timestamps = false;
 
     public function otp(): HasMany
