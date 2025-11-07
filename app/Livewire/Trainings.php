@@ -11,6 +11,8 @@ class Trainings extends Component
     public $name;
     public $desc;
     public $purpose;
+    public $day_duration;
+    public $time_duration;
     public $trainingId;
 
     protected TrainingServiceInterface $service;
@@ -42,6 +44,8 @@ class Trainings extends Component
             'name' => $this->name,
             'desc' => $this->desc,
             'purpose' => $this->purpose,
+            'day_duration' => $this->day_duration,
+            'time_duration' => $this->time_duration,
         ];
 
 
@@ -62,6 +66,8 @@ class Trainings extends Component
         $this->name = $training->name;
         $this->desc = $training->desc;
         $this->purpose = $training->purpose;
+        $this->day_duration = $training->day_duration;
+        $this->time_duration = $training->time_duration;
     }
 
     public function update()
@@ -72,6 +78,8 @@ class Trainings extends Component
             'name' => $this->name,
             'desc' => $this->desc,
             'purpose' => $this->purpose,
+            'day_duration' => $this->day_duration,
+            'time_duration' => $this->time_duration,
         ];
 
         $update = $this->service->update($this->trainingId, $data);

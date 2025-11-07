@@ -84,6 +84,24 @@
                                 <textarea class="form-control" id="purpose" wire:model="purpose" rows="3"
                                     placeholder="Training purpose"></textarea>
                             </div>
+                            <div class="mb-3">
+                                <label for="day_duration" class="form-label text-uppercase">Day Duration</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="day_duration"
+                                        wire:model="day_duration" placeholder="Enter number of days" min="0">
+                                    <span class="input-group-text bg-light text-muted fw-semibold">Days</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="time_duration" class="form-label text-uppercase">Time Duration</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="time_duration"
+                                        wire:model="time_duration" placeholder="Enter number of hours" min="0">
+                                    <span class="input-group-text bg-light text-muted fw-semibold">Hours</span>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -128,6 +146,25 @@
                                 <textarea class="form-control" id="edit_purpose" wire:model="purpose" rows="3"
                                     placeholder="Training purpose"></textarea>
                             </div>
+
+                            <div class="mb-3">
+                                <label for="day_duration" class="form-label text-uppercase">Day Duration</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="day_duration"
+                                        wire:model="day_duration" placeholder="Enter number of days" min="0">
+                                    <span class="input-group-text bg-light text-muted fw-semibold">Days</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="time_duration" class="form-label text-uppercase">Time Duration</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="time_duration"
+                                        wire:model="time_duration" placeholder="Enter number of hours" min="0">
+                                    <span class="input-group-text bg-light text-muted fw-semibold">Hours</span>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

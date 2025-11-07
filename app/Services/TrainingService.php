@@ -38,6 +38,8 @@ class TrainingService implements TrainingServiceInterface
                 'name' => $data['name'],
                 'desc' => $data['desc'],
                 'purpose' => $data['purpose'],
+                'day_duration' => $data['day_duration'],
+                'time_duration' => $data['time_duration'],
             ]);
 
             DB::commit();
