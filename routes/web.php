@@ -3,6 +3,7 @@
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\OtpController;
+use App\Http\Controllers\TrainingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('login', [LoginController::class, 'login'])->name('login');
@@ -19,6 +20,9 @@ Route::get('location', [MainController::class, 'location'])->name('location');
 Route::get('organizer', [MainController::class, 'organizer'])->name('organizer');
 Route::get('trainer', [MainController::class, 'trainer'])->name('trainer');
 Route::get('event', [MainController::class, 'event'])->name('event');
+
+//TRAINING FEATURES
+Route::get('training-content/{id}', [TrainingController::class, 'trainingContent'])->name('training-content');
 
 
 

@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Training;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
+use App\Models\TrainingTransaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TrainingService implements TrainingServiceInterface
@@ -46,7 +48,6 @@ class TrainingService implements TrainingServiceInterface
             return $training;
         } catch (\Throwable $e) {
             DB::rollBack();
-            dd($e);
             throw $e;
         }
     }
@@ -80,6 +81,52 @@ class TrainingService implements TrainingServiceInterface
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
+        }
+    }
+
+    public function getContent(int $id)
+    {
+        return TrainingTransaction::where('training_id', $id)->get();
+    }
+
+    public function contentUpload(int $id, $file, string $fileName)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $path = $file->storeAs('training_content', $fileName, 'public');
+            $create = TrainingTransaction::create([
+                'training_id' => $id,
+                'file' => $fileName
+            ]);
+
+            DB::commit();
+            return $create;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function contentDelete(int $id): bool
+    {
+        DB::beginTransaction();
+
+        try {
+            $content = TrainingTransaction::findOrFail($id);
+
+            if (Storage::disk('public')->exists('training_content/' . $content->file)) {
+                Storage::disk('public')->delete('training_content/' . $content->file);
+            }
+
+            $content->delete();
+
+            DB::commit();
+            return true;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return false;
         }
     }
 }

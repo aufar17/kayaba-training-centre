@@ -17,7 +17,8 @@
             <li class="nav-item mt-3">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Training Data</h6>
             </li>
-            <x-navlink href="{{ route('training') }}" :active="request()->is('training') " icon="fa-list">Training List
+            <x-navlink href="{{ route('training') }}" :active="request()->is(['training','training-content/*']) "
+                icon="fa-list">Training List
             </x-navlink>
             <x-navlink href="{{ route('location') }}" :active="request()->is('location') " icon="fa-location-dot">
                 Training

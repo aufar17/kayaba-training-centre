@@ -31,6 +31,11 @@
                             Hours
                         </td>
                         <td class="text-center">
+                            <a href="{{ route('training-content',$training->id) }}"
+                                class="badge bg-gradient-info border-0 shadow-xl">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
+
                             <button wire:click="edit({{ $training->id }})" class="badge bg-warning border-0 shadow-xl"
                                 data-bs-toggle="modal" data-bs-target="#editTrainingModal">
                                 <i class="fa-solid fa-edit"></i>
@@ -49,7 +54,6 @@
             </table>
         </div>
 
-        {{-- ===================== MODAL CREATE ===================== --}}
         <div wire:ignore.self class="modal fade" id="newTrainingModal" tabindex="-1"
             aria-labelledby="newTrainingModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-md">
