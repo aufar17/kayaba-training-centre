@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->integer('event_id')->index();
             $table->string('npk')->index();
-            $table->integer('approval');
+            $table->integer('approval')->index();
+            $table->integer('completed')->index();
             $table->timestamps();
         });
     }

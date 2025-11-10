@@ -161,25 +161,25 @@ class EventParticipant extends Component
 
     public function approvalAction($participant)
     {
-        $approval = $participant->approval;
+        $approval = (int) $participant->approval;
         $dept = $this->user->dept;
         $role = $this->role;
 
         switch (true) {
-            case $dept === 'HRD' && (int) $approval === 1:
-                return ['type' => 'button', 'show' => true];
+            case $dept === 'HRD' && $approval === 1:
+                return ['type' => 'button', 'show' => true, 'data' => null];
 
-            case $dept === 'HRD' && in_array((int) $approval, [2, -2], true):
-                return ['type' => 'label', 'data' => $this->approvalLabel((int) $approval)];
+            case $dept === 'HRD' && in_array($approval, [2, -2], true):
+                return ['type' => 'label', 'data' => $this->approvalLabel($approval)];
 
-            case $role === 'manager' && in_array((int) $approval, [1, -1], true):
-                return ['type' => 'label', 'data' => $this->approvalLabel((int) $approval)];
+            case $role === 'manager' && in_array($approval, [1, -1], true):
+                return ['type' => 'label', 'data' => $this->approvalLabel($approval)];
 
-            case $role === 'manager' && in_array((int) $approval, [0, null], true):
-                return ['type' => 'button', 'show' => true];
+            case $role === 'manager' && in_array($approval, [0, null], true):
+                return ['type' => 'button', 'show' => true, 'data' => $this->approvalLabel($approval)];
 
             default:
-                return ['type' => 'label', 'data' => $this->approvalLabel((int) $approval)];
+                return ['type' => 'label', 'data' => $this->approvalLabel($approval)];
         }
     }
 
@@ -190,7 +190,8 @@ class EventParticipant extends Component
             -1  => ['text' => 'Rejected by DeptHead', 'class' => 'bg-gradient-danger'],
             2   => ['text' => 'Approved by HRD', 'class' => 'bg-gradient-success'],
             -2  => ['text' => 'Rejected by HRD', 'class' => 'bg-gradient-danger'],
-            default => ['text' => 'Pending Approval', 'class' => 'bg-gradient-secondary'],
+            0 => ['text' => 'Pending Approval', 'class' => 'bg-gradient-secondary'],
+            default => ['text' => 'Waiting Approval', 'class' => 'bg-gradient-secondary'],
         };
     }
 
@@ -198,5 +199,39 @@ class EventParticipant extends Component
     {
         $service = $this->service ?? app(EventServiceInterface::class);
         return $service->getHistoryApprovalbyDept($id);
+    }
+
+    public function setCompleted($participantId)
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $data = [
+            'id' => $participantId,
+            'completed' => 1
+        ];
+        $service->completedParticipant($data);
+
+        session()->flash('success', 'The participant has successfully completed the training.');
+        return redirect()->route('event-participant', ['id' => $this->id]);
+    }
+    public function setNotCompleted($participantId)
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $data = [
+            'id' => $participantId,
+            'completed' => -1
+        ];
+        $service->completedParticipant($data);
+
+        session()->flash('success', 'The participant did not successfully complete the training.');
+        return redirect()->route('event-participant', ['id' => $this->id]);
+    }
+
+    public function completedLabel($completed)
+    {
+        return match ($completed) {
+            0   => ['text' => 'Not Complete', 'class' => 'bg-gradient-danger'],
+            1 => ['text' => 'Completed', 'class' => 'bg-gradient-success'],
+            default => ['text' => 'Waiting Report', 'class' => 'bg-gradient-secondary'],
+        };
     }
 }

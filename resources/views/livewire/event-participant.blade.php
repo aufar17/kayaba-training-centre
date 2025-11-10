@@ -53,10 +53,17 @@
                         <th class="text-center fw-bold py-2">Approval</th>
                         @endif
                         @endif
+                        @if ($event->status == 'past')
+                        <th class="text-center fw-bold py-1">Completed</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($participants as $participant)
+                    @php
+                    $action = $this->approvalAction($participant);
+                    $completed = $this->completedLabel($participant->completed);
+                    @endphp
                     <tr>
                         <td class="text-center align-middle">{{ $loop->iteration }}</td>
                         <td class="text-center align-middle">{{ $participant->npk }}</td>
@@ -72,12 +79,8 @@
                             </button>
                         </td>
                         @endif
-                        @if ($this->role == 'manager' || $user->dept == 'HRD')
+                        @if ($this->role == 'manager')
                         <td class="text-center align-middle">
-                            @php
-                            $action = $this->approvalAction($participant);
-                            @endphp
-
                             @if ($action['type'] === 'button')
                             <div class="mt-2 d-flex justify-content-center gap-2">
                                 <button class="badge bg-gradient-success border-0 shadow-lg"
@@ -97,6 +100,28 @@
                         </td>
                         @endif
                         @endif
+                        @if ($event->status == 'past')
+                        <td class="text-center align-middle">
+                            @if ($participant->completed == 0)
+                            @if ($user->dept == 'HRD')
+                            <button class="badge bg-gradient-success border-0 shadow-lg"
+                                wire:click="setCompleted('{{ $participant->id }}')">
+                                <i class="fa-solid fa-check fs-6"></i>
+                            </button>
+                            <button class="badge bg-gradient-danger border-0 shadow-lg"
+                                wire:click="setNotCompleted('{{ $participant->id }}')">
+                                <i class="fa-solid fa-xmark fs-6"></i>
+                            </button>
+                            @else
+                            <span class="badge bg-gradient-info px-3 py-2">Waiting Report</span>
+                            @endif
+                            @else
+                            <span class="badge {{ $completed['class'] }} px-3 py-2">
+                                {{ $completed['text'] }}
+                            </span>
+                            @endif
+                        </td>
+                        @endif
                     </tr>
                     @empty
                     @endforelse
@@ -109,8 +134,8 @@
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-0 shadow">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title fw-bold" id="historyApprovalLabel">
+                    <div class="modal-header bg-info">
+                        <h5 class="modal-title fw-bold text-white" id="historyApprovalLabel">
                             <i class="fa-solid fa-clock-rotate-left me-2"></i>History Approval
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"

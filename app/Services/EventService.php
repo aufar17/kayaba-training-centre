@@ -287,7 +287,7 @@ class EventService implements EventServiceInterface
             ->participantModel()
             ->with(['event', 'user'])
             ->where('event_id', $id)
-            ->where('approval', '>', 0)
+            ->where('approval', '>=', 0)
             ->get();
 
         return $participants->where('user.dept', $dept);
@@ -328,20 +328,7 @@ class EventService implements EventServiceInterface
         ];
     }
 
-    public function deleteParticipant($id)
-    {
-        DB::beginTransaction();
 
-        try {
-            $participant = EventTransaction::findOrFail($id);
-            $participant->delete();
-            DB::commit();
-            return true;
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
-        }
-    }
     public function registerParticipant($data)
     {
         DB::beginTransaction();
@@ -351,8 +338,24 @@ class EventService implements EventServiceInterface
                 'event_id' => $data['event_id'],
                 'npk' => $data['npk'],
                 'approval' => 0,
+                'completed' => 0,
             ]);
             DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function deleteParticipant($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $participant = EventTransaction::findOrFail($id);
+            $participant->delete();
+            DB::commit();
+            return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
@@ -370,6 +373,25 @@ class EventService implements EventServiceInterface
 
             $participant->update([
                 'approval' => $data['approval'],
+            ]);
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function completedParticipant($data)
+    {
+        DB::beginTransaction();
+        try {
+            $participant = $this->repository
+                ->participantModel()
+                ->where('id', $data['id'])
+                ->first();
+
+            $participant->update([
+                'completed' => $data['completed'],
             ]);
             DB::commit();
         } catch (\Throwable $e) {

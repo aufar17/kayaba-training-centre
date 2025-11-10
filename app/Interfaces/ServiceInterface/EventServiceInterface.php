@@ -25,4 +25,5 @@ interface EventServiceInterface
     public function deleteParticipant($id);
     public function registerParticipant($data);
     public function approvalParticipant($data);
+    public function completedParticipant($data);
 }
