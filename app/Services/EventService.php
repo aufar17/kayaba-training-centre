@@ -10,7 +10,10 @@ use App\Interfaces\ServiceInterface\OrganizerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
 use App\Models\Event;
+use App\Models\EventTransaction;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EventService implements EventServiceInterface
@@ -37,12 +40,33 @@ class EventService implements EventServiceInterface
 
     public function getAll(): Collection
     {
-        return $this->repository->getAll();
+        return $this->repository
+            ->getModel()
+            ->with(['trainings', 'organizers', 'trainers', 'locations'])
+            ->latest()
+            ->get();
     }
     public function getById(int $id)
     {
-        return $this->repository->find($id);
+        $event = $this->repository->find($id);
+
+        if (!$event) {
+            return null;
+        }
+
+        $now = now();
+
+        if ($event->start_date <= $now && $event->end_date >= $now) {
+            $event->status = 'ongoing';
+        } elseif ($event->start_date > $now) {
+            $event->status = 'upcoming';
+        } else {
+            $event->status = 'past';
+        }
+
+        return $event;
     }
+
 
     public function create(array $data)
     {
@@ -201,6 +225,153 @@ class EventService implements EventServiceInterface
 
             DB::commit();
             return $deleted;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function getNowEvent(): Collection
+    {
+        $today = Carbon::today();
+
+        return $this->repository
+            ->getModel()
+            ->with(['trainings', 'organizers', 'trainers', 'locations'])
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->latest('start_date')
+            ->get();
+    }
+
+    public function getUpcomingEvent(): Collection
+    {
+        $today = Carbon::today();
+
+        return $this->repository
+            ->getModel()
+            ->with(['trainings', 'organizers', 'trainers', 'locations'])
+            ->whereDate('start_date', '>', $today)
+            ->latest('start_date')
+            ->get();
+    }
+
+    public function getPastEvent(): Collection
+    {
+        $today = Carbon::today();
+
+        return $this->repository
+            ->getModel()
+            ->with(['trainings', 'organizers', 'trainers', 'locations'])
+            ->whereDate('end_date', '<', $today)
+            ->latest('start_date')
+            ->get();
+    }
+
+
+    public function getParticipants($id)
+    {
+        $query = $this->repository
+            ->participantModel()
+            ->with(['event', 'user'])
+            ->where('event_id', $id)
+            ->where('approval', '>', 0);
+
+        return $query->get();
+    }
+
+    public function getParticipantbyDept($id)
+    {
+        $dept = Auth::user()->dept;
+        $participants = $this->repository
+            ->participantModel()
+            ->with(['event', 'user'])
+            ->where('event_id', $id)
+            ->where('approval', '>', 0)
+            ->get();
+
+        return $participants->where('user.dept', $dept);
+    }
+    public function getHistoryApprovalbyDept($id)
+    {
+        $dept = Auth::user()->dept;
+
+        $participants = $this->repository
+            ->participantModel()
+            ->with(['event', 'user'])
+            ->where('event_id', $id)
+            ->get();
+
+        if ($dept == 'HRD') {
+            return $participants->filter(function ($participant) {
+                return in_array($participant->approval, [2, -2]);
+            });
+        } else {
+            return $participants->where('user.dept', $dept);
+        }
+    }
+
+
+    public function countApprovalByEvent($participants)
+    {
+        $approvedHrd = $participants->where('approval', 2)->count();
+        $approvedManager = $participants->where('approval', 1)->count();
+        $rejectedHrd = $participants->where('approval', -2)->count();
+        $rejectedManager = $participants->where('approval', -1)->count();
+        $total  = $participants->count();
+        return [
+            'approvedHrd' => $approvedHrd,
+            'approvedManager' => $approvedManager,
+            'rejectedHrd' => $rejectedHrd,
+            'rejectedManager' => $rejectedManager,
+            'total'  => $total,
+        ];
+    }
+
+    public function deleteParticipant($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $participant = EventTransaction::findOrFail($id);
+            $participant->delete();
+            DB::commit();
+            return true;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+    public function registerParticipant($data)
+    {
+        DB::beginTransaction();
+
+        try {
+            $participant = $this->repository->participantModel()->create([
+                'event_id' => $data['event_id'],
+                'npk' => $data['npk'],
+                'approval' => 0,
+            ]);
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+    public function approvalParticipant($data)
+    {
+        DB::beginTransaction();
+
+        try {
+            $participant = $this->repository
+                ->participantModel()
+                ->where('id', $data['id'])
+                ->first();
+
+            $participant->update([
+                'approval' => $data['approval'],
+            ]);
+            DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;

@@ -34,10 +34,10 @@
                         <td class="text-center">{{ $event->start_date }} - {{ $event->end_date }}</td>
                         <td class="text-center">{{ $event->start_time }} - {{ $event->end_time }}</td>
                         <td class="text-center">
-                            <button class="badge bg-gradient-info border-0 shadow-xl" data-bs-toggle="modal"
-                                data-bs-target="#participantEventModal">
+                            <a href="{{ route('event-participant',$event->id) }}"
+                                class="badge bg-gradient-info border-0 shadow-xl">
                                 <i class="fa-solid fa-user-group"></i>
-                            </button>
+                            </a>
 
                             <button wire:click="edit({{ $event->id }})" class="badge bg-warning border-0 shadow-xl"
                                 data-bs-toggle="modal" data-bs-target="#editEventModal">

@@ -1,16 +1,10 @@
-<x-layout.app :user="$user" nav="Event">
-    @if ($user->dept == 'HRD')
-    <livewire:events />
-    @else
-    <livewire:event-user :user="$user" />
-    @endif
-
+<x-layout.app :user="$user" nav="Training Event Participants">
+    <livewire:event-participant :id="$id" :user="$user" />
 </x-layout.app>
-
 
 <script>
     $(document).ready(function () {
-        $('#event').DataTable({
+        $('#event-participant').DataTable({
             responsive: true,
             autoWidth: false,
             paging: true,           
@@ -23,7 +17,7 @@
         });
     });
     $(document).ready(function () {
-        $('#event-user').DataTable({
+        $('#history-approval').DataTable({
             responsive: true,
             autoWidth: false,
             paging: true,           

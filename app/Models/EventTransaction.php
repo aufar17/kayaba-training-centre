@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Auth\CTUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,5 +19,10 @@ class EventTransaction extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class, 'event_id', 'id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(CTUser::class, 'npk', 'npk');
     }
 }

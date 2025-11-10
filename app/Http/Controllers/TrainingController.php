@@ -24,4 +24,13 @@ class TrainingController extends Controller
 
         return view('training-content', $data);
     }
+    public function eventParticipant($id)
+    {
+        $data = [
+            'user' => $this->session(),
+            'id' => $id
+        ];
+
+        return view('event-participant', $data);
+    }
 }

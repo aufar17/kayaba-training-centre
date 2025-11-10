@@ -85,8 +85,8 @@ class Trainings extends Component
         $update = $this->service->update($this->trainingId, $data);
 
         $update
-            ? session()->flash('success', 'Training berhasil diperbarui')
-            : session()->flash('error', 'Gagal memperbarui training');
+            ? session()->flash('success', 'Training updated successfully!')
+            : session()->flash('error', 'Failed to update training. Please try again.');
 
         return redirect()->route('training');
     }
@@ -102,8 +102,8 @@ class Trainings extends Component
         $delete = $this->service->delete($this->trainingId);
 
         $delete
-            ? session()->flash('success', 'Training berhasil dihapus')
-            : session()->flash('error', 'Gagal menghapus training');
+            ? session()->flash('success', 'Training deleted successfully!')
+            : session()->flash('error', 'Failed to delete training. Please try again.');
 
         return redirect()->route('training');
     }

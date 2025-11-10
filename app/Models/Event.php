@@ -39,15 +39,16 @@ class Event extends Model
         return $this->belongsTo(Trainer::class, 'trainer_id', 'id');
     }
 
-    // public function getStartDateAttribute($value)
-    // {
-    //     return Carbon::parse($value)->format('d M Y');
-    // }
+    public function startDateFormat(): string
+    {
+        return Carbon::parse($this->start_date)->format('d M Y');
+    }
 
-    // public function getEndDateAttribute($value)
-    // {
-    //     return Carbon::parse($value)->format('d M Y');
-    // }
+    public function endDateFormat(): string
+    {
+        return Carbon::parse($this->end_date)->format('d M Y');
+    }
+
     public function getStartTimeAttribute($value)
     {
         return Carbon::parse($value)->format('H:i');

@@ -1,3 +1,7 @@
+@props([
+'user'
+]);
+
 <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 "
     id="sidenav-main">
     <div class="sidenav-header">
@@ -14,6 +18,7 @@
     <div class="collapse navbar-collapse  w-auto  max-height-vh-100 h-100" id="sidenav-collapse-main">
         <ul class="navbar-nav">
             <x-navlink href="{{ route('index') }}" :active="request()->is('/') " icon="fa-house">Dashboard</x-navlink>
+            @if($user->dept == 'HRD')
             <li class="nav-item mt-3">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Training Data</h6>
             </li>
@@ -30,16 +35,14 @@
             <x-navlink href="{{ route('trainer') }}" :active="request()->is('trainer') " icon="fa-person">
                 Trainer
             </x-navlink>
+            @endif
 
             <li class="nav-item mt-3">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Main Event</h6>
             </li>
-            <x-navlink href="{{ route('event') }}" :active="request()->is('event') " icon="fa-calendar-days">Event
+            <x-navlink href="{{ route('event') }}" :active="request()->is(['event','event-participant/*']) "
+                icon="fa-calendar-days">Event
             </x-navlink>
-
-            <li class="nav-item mt-3">
-                <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account pages</h6>
-            </li>
         </ul>
     </div>
 </aside>

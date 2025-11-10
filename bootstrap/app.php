@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckHRD;
 use App\Http\Middleware\CheckSession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->appendToGroup('web', [
             CheckSession::class,
+            // CheckHRD::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

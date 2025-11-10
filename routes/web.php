@@ -23,6 +23,7 @@ Route::get('event', [MainController::class, 'event'])->name('event');
 
 //TRAINING FEATURES
 Route::get('training-content/{id}', [TrainingController::class, 'trainingContent'])->name('training-content');
+Route::get('event-participant/{id}', [TrainingController::class, 'eventParticipant'])->name('event-participant');
 
 
 

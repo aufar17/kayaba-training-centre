@@ -24,7 +24,7 @@
 ])
 
 <body class="g-sidenav-show bg-gray-100 d-flex flex-column min-vh-100">
-    <x-sidebar></x-sidebar>
+    <x-sidebar :user="$user"></x-sidebar>
     <main class="main-content position-relative border-radius-lg flex-grow-1 d-flex flex-column">
         <x-navbar :user="$user">
             @slot('title')

@@ -46,4 +46,19 @@ class CTUser extends Authenticatable
     {
         return $this->pwd;
     }
+
+    public function getUserRole()
+    {
+        $hrdRole = HrdSo::where('npk', $this->npk)->first();
+        if ($hrdRole) {
+            return $hrdRole->role;
+        }
+
+        return match (true) {
+            $this->golongan == 4 && $this->acting == 2 => 'spv',
+            $this->golongan == 3 => 'foreman',
+            $this->golongan == 2 => 'pic',
+            default => 'operator',
+        };
+    }
 }
