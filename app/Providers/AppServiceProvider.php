@@ -7,6 +7,7 @@ use App\Interfaces\RepositoryInterface\LocationRepositoryInterface;
 use App\Interfaces\RepositoryInterface\OrganizerRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainerRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
+use App\Interfaces\ServiceInterface\DashboardServiceInterface;
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Interfaces\ServiceInterface\LocationServiceInterface;
 use App\Interfaces\ServiceInterface\OrganizerServiceInterface;
@@ -17,6 +18,7 @@ use App\Repositories\LocationRepository;
 use App\Repositories\OrganizerRepository;
 use App\Repositories\TrainerRepository;
 use App\Repositories\TrainingRepository;
+use App\Services\DashboardService;
 use App\Services\EventService;
 use App\Services\LocationService;
 use App\Services\OrganizerService;
@@ -24,6 +26,7 @@ use App\Services\TrainerService;
 use App\Services\TrainingService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OrganizerServiceInterface::class, OrganizerService::class);
         $this->app->bind(TrainerServiceInterface::class, TrainerService::class);
         $this->app->bind(EventServiceInterface::class, EventService::class);
+        $this->app->bind(DashboardServiceInterface::class, DashboardService::class);
 
         //Repository
         $this->app->bind(TrainingRepositoryInterface::class, TrainingRepository::class);
