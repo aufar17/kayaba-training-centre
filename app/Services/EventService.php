@@ -399,4 +399,13 @@ class EventService implements EventServiceInterface
             throw $e;
         }
     }
+
+    public function historyParticipant($npk)
+    {
+        return $this->repository
+            ->participantModel()
+            ->with(['event.trainings', 'user'])
+            ->where('npk', $npk)
+            ->get();
+    }
 }

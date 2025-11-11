@@ -33,4 +33,13 @@ class TrainingController extends Controller
 
         return view('event-participant', $data);
     }
+    public function participantHistory($npk)
+    {
+        $data = [
+            'user' => $this->session(),
+            'npk' => $npk
+        ];
+
+        return view('participant-history', $data);
+    }
 }

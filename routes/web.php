@@ -20,10 +20,12 @@ Route::get('location', [MainController::class, 'location'])->name('location');
 Route::get('organizer', [MainController::class, 'organizer'])->name('organizer');
 Route::get('trainer', [MainController::class, 'trainer'])->name('trainer');
 Route::get('event', [MainController::class, 'event'])->name('event');
+Route::get('history', [MainController::class, 'history'])->name('history');
 
 //TRAINING FEATURES
 Route::get('training-content/{id}', [TrainingController::class, 'trainingContent'])->name('training-content');
 Route::get('event-participant/{id}', [TrainingController::class, 'eventParticipant'])->name('event-participant');
+Route::get('participant-history/{npk}', [TrainingController::class, 'participantHistory'])->name('participant-history');
 
 
 

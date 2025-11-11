@@ -43,6 +43,11 @@
             <x-navlink href="{{ route('event') }}" :active="request()->is(['event','event-participant/*']) "
                 icon="fa-calendar-days">Event
             </x-navlink>
+            @if($user->dept == 'HRD')
+            <x-navlink href="{{ route('history') }}" :active="request()->is(['history']) " icon="fa-rotate-left">
+                History Training
+            </x-navlink>
+            @endif
         </ul>
     </div>
 </aside>

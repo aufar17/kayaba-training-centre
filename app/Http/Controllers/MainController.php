@@ -55,4 +55,11 @@ class MainController extends Controller
         ];
         return view('event', $data);
     }
+    public function history()
+    {
+        $data = [
+            'user' => $this->session(),
+        ];
+        return view('history', $data);
+    }
 }
