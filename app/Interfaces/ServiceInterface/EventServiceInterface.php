@@ -27,4 +27,8 @@ interface EventServiceInterface
     public function approvalParticipant($data);
     public function completedParticipant($data);
     public function historyParticipant($npk);
+    public function registerNotification($id);
+    public function deptApprovalNotification($id);
+    public function HrdApprovalNotification($id);
+    public function reportNotification($id);
 }

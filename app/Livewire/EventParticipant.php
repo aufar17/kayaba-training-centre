@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Models\Auth\CTUser;
+use App\Models\EventTransaction;
+use App\Models\Notification;
 use Livewire\Component;
 
 class EventParticipant extends Component
@@ -13,6 +15,10 @@ class EventParticipant extends Component
     public $npk;
     public $role;
     public $selectedId;
+    public $registerNotif;
+    public $deptApprovalNotif;
+    public $hrdApprovalNotif;
+    public $reportNotif;
 
     public $participants = [];
     public $counts = [];
@@ -23,6 +29,10 @@ class EventParticipant extends Component
         $this->service = app(EventServiceInterface::class);
         $this->role = $this->checkRole();
         $this->participants = $this->getParticipants();
+        $this->registerNotif = $this->checkRegisterNotif();
+        $this->deptApprovalNotif = $this->checkDeptApprovalNotif();
+        $this->hrdApprovalNotif = $this->checkHrdApprovalNotif();
+        $this->reportNotif = $this->checkReportNotif();
     }
     public function render()
     {
@@ -65,9 +75,17 @@ class EventParticipant extends Component
 
     public function getUser()
     {
-        $listUser = CTUser::where('dept', $this->user->dept)->get();
+        $registeredNPKs = EventTransaction::where('event_id', $this->id)
+            ->pluck('npk')
+            ->toArray();
+
+        $listUser = CTUser::where('dept', $this->user->dept)
+            ->whereNotIn('npk', $registeredNPKs)
+            ->get();
+
         return $listUser;
     }
+
 
     public function getParticipants()
     {
@@ -201,6 +219,86 @@ class EventParticipant extends Component
         return $service->getHistoryApprovalbyDept($id);
     }
 
+
+    public function checkRegisterNotif()
+    {
+        $check = Notification::where('event_id', $this->id)
+            ->where('type', 'register')
+            ->exists();
+        return $check;
+    }
+
+    public function checkDeptApprovalNotif()
+    {
+        $check = Notification::where('event_id', $this->id)
+            ->where('type', 'dept_approval')
+            ->exists();
+        return $check;
+    }
+    public function checkHrdApprovalNotif()
+    {
+        $check = Notification::where('event_id', $this->id)
+            ->where('type', 'hrd_approval')
+            ->exists();
+        return $check;
+    }
+    public function checkReportNotif()
+    {
+        $check = Notification::where('event_id', $this->id)
+            ->where('type', 'report')
+            ->exists();
+        return $check;
+    }
+
+    public function registerNotification()
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $id = $this->id;
+        $notif = $service->registerNotification($id);
+
+        $notif
+            ? session()->flash('success', 'Notification sent successfully!')
+            : session()->flash('error', 'Failed to send notification. Please try again.');
+
+        return redirect()->route('event-participant', ['id' => $id]);
+    }
+    public function deptApprovalNotification()
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $id = $this->id;
+        $notif = $service->deptApprovalNotification($id);
+
+        $notif
+            ? session()->flash('success', 'Notification sent successfully!')
+            : session()->flash('error', 'Failed to send notification. Please try again.');
+
+        return redirect()->route('event-participant', ['id' => $id]);
+    }
+    public function hrdApprovalNotification()
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $id = $this->id;
+        $notif = $service->hrdApprovalNotification($id);
+
+        $notif
+            ? session()->flash('success', 'Notification sent successfully!')
+            : session()->flash('error', 'Failed to send notification. Please try again.');
+
+        return redirect()->route('event-participant', ['id' => $id]);
+    }
+    public function reportNotification()
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $id = $this->id;
+        $notif = $service->reportNotification($id);
+
+        $notif
+            ? session()->flash('success', 'Notification sent successfully!')
+            : session()->flash('error', 'Failed to send notification. Please try again.');
+
+        return redirect()->route('event-participant', ['id' => $id]);
+    }
+
     public function setCompleted($participantId)
     {
         $service = $this->service ?? app(EventServiceInterface::class);
@@ -229,6 +327,7 @@ class EventParticipant extends Component
     public function completedLabel($completed)
     {
         return match ($completed) {
+            -1 => ['text' => 'Not Completed', 'class' => 'bg-gradient-danger'],
             0   => ['text' => 'Not Complete', 'class' => 'bg-gradient-danger'],
             1 => ['text' => 'Completed', 'class' => 'bg-gradient-success'],
             default => ['text' => 'Waiting Report', 'class' => 'bg-gradient-secondary'],

@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 
 class MasterTrainingImport implements ToModel, WithHeadingRow, WithMultipleSheets
 {
@@ -15,10 +16,16 @@ class MasterTrainingImport implements ToModel, WithHeadingRow, WithMultipleSheet
         return 1;
     }
 
+
+    public function boot()
+    {
+        HeadingRowFormatter::default('slug');
+    }
+
     public function sheets(): array
     {
         return [
-            2 => $this,
+            0 => $this,
         ];
     }
 
@@ -26,10 +33,10 @@ class MasterTrainingImport implements ToModel, WithHeadingRow, WithMultipleSheet
     {
         try {
             return new Training([
-                'code' => $row['kode_training'] ?? null,
-                'name' => $row['training'] ?? null,
-                'desc' => $row['description'] ?? null,
-                'purpose' => $row['purpose'] ?? null,
+                'code' => $row['kode'] ?? null,
+                'name' => $row['program_training'] ?? null,
+                'desc' => $row['golongan'] ?? null,
+                'purpose' => $row['departement'] ?? null,
             ]);
         } catch (\Throwable $e) {
             Log::error('Gagal import baris training: ' . $e->getMessage(), [

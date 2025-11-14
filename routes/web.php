@@ -21,6 +21,7 @@ Route::get('organizer', [MainController::class, 'organizer'])->name('organizer')
 Route::get('trainer', [MainController::class, 'trainer'])->name('trainer');
 Route::get('event', [MainController::class, 'event'])->name('event');
 Route::get('history', [MainController::class, 'history'])->name('history');
+Route::get('notification', [MainController::class, 'notification'])->name('notification');
 
 //TRAINING FEATURES
 Route::get('training-content/{id}', [TrainingController::class, 'trainingContent'])->name('training-content');

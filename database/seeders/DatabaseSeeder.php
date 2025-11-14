@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             LocationSeeder::class,
             OrganizerSeeder::class,
             TrainerSeeder::class,
+            DepartementSeeder::class,
         ]);
     }
 }

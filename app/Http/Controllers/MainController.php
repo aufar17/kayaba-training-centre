@@ -62,4 +62,11 @@ class MainController extends Controller
         ];
         return view('history', $data);
     }
+    public function notification()
+    {
+        $data = [
+            'user' => $this->session(),
+        ];
+        return view('notification', $data);
+    }
 }

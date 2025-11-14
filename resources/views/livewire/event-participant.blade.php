@@ -33,9 +33,31 @@
         <hr class="mt-3 mb-5">
         @endif
 
-        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#historyApprovalModal">
+        <button type="button" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#historyApprovalModal">
             <i class="fa-solid fa-clock-rotate-left me-2"></i>History Approval
         </button>
+        @if ($this->role === 'spv' && !$registerNotif)
+        <button type="button" class="btn btn-success" wire:click="registerNotification">
+            <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
+        </button>
+        @endif
+        @if ($this->role === 'manager' && !$deptApprovalNotif)
+        <button type="button" class="btn btn-success" wire:click="deptApprovalNotification">
+            <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
+        </button>
+        @endif
+        @if ($user->dept === 'HRD')
+        @if (!$hrdApprovalNotif)
+        <button type="button" class="btn btn-success" wire:click="hrdApprovalNotification">
+            <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
+        </button>
+        @endif
+        @if ( $event->status == 'past')
+        <button type="button" class="btn btn-success" wire:click="reportNotification">
+            <i class="fa-solid fa-paper-plane me-2"></i>Send Report
+        </button>
+        @endif
+        @endif
 
         <div class="table-responsive">
             <table id="event-participant" class="table table-light table-striped table-hover table-bordered shadow-sm">
@@ -79,7 +101,7 @@
                             </button>
                         </td>
                         @endif
-                        @if ($this->role == 'manager')
+                        @if ($this->role == 'manager' || $user->dept == 'HRD')
                         <td class="text-center align-middle">
                             @if ($action['type'] === 'button')
                             <div class="mt-2 d-flex justify-content-center gap-2">
