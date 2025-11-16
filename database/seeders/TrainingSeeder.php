@@ -5,32 +5,24 @@ namespace Database\Seeders;
 use App\Imports\MasterTrainingImport;
 use Illuminate\Database\Seeder;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\TrainingImport;
 use App\Models\Training;
 
 class TrainingSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
-        // $path = public_path('docs/training.xlsx');
+        $path = public_path('docs/Matrix.xlsx');
 
-        // Excel::import(new MasterTrainingImport, $path);
+        if (!file_exists($path)) {
+            $this->command->error("File tidak ditemukan: {$path}");
+            return;
+        }
 
-        // $this->command->info('✅ TrainingSeeder: data berhasil diimport dari training.xlsx');
-
-        $trainings = [
-            [
-                'code' => 'TFG1001',
-                'name' => 'Process Failure Mode and Effect  Analysis',
-                'desc' => 'TFG1001',
-                'purpose' => 'Agar trainee memahami keseluruhan proses produksi dan menemukan kemungkinan kegagalan yang akan terjadi melalui serangkaian penggunaan metode-metode PFMEA dan analisanya. Pada akhirnya diharapkan dapat mengoptimalkan tingkat keberhasilan proses produksi',
-                'day_duration' => 3,
-                'time_duration' => 3
-            ],
-        ];
-
-        foreach ($trainings as $training) {
-            Training::create($training);
-        };
+        try {
+            Excel::import(new MasterTrainingImport(), $path);
+            $this->command->info('Training imported successfully!');
+        } catch (\Exception $e) {
+            $this->command->error('Import gagal: ' . $e->getMessage());
+        }
     }
 }

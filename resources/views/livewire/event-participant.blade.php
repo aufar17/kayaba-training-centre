@@ -66,7 +66,7 @@
                         <th class="text-center fw-bold py-2">No</th>
                         <th class="text-center fw-bold py-2">NPK</th>
                         <th class="text-center fw-bold py-2">Name</th>
-                        <th class="text-center fw-bold py-2">Departement</th>
+                        <th class="text-center fw-bold py-2">Department</th>
                         @if ($event->status == 'upcoming')
                         @if ($this->role == 'spv')
                         <th class="text-center fw-bold py-2">Action</th>
@@ -172,7 +172,7 @@
                                         <th class="text-center">No</th>
                                         <th class="text-center">NPK</th>
                                         <th class="text-center">Name</th>
-                                        <th class="text-center">Departement</th>
+                                        <th class="text-center">Department</th>
                                         <th class="text-center">Approval</th>
                                     </tr>
                                 </thead>

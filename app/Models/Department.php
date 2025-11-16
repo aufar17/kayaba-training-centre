@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Departement extends Model
+class Department extends Model
 {
     protected $connection = 'mysql';
-    protected $table = 'departements';
+    protected $table = 'departments';
     protected $fillable = [
         'code',
         'name',

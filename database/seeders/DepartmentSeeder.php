@@ -2,19 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Imports\DepartementImport;
+use App\Imports\DepartmentImport;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Maatwebsite\Excel\Facades\Excel;
 
-class DepartementSeeder extends Seeder
+class DepartmentSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Excel::import(new DepartementImport, public_path('docs/Matriks Training.xlsx'));
-        $this->command->info('Users imported successfully!');
+        Excel::import(new DepartmentImport, public_path('docs/Dept.xlsx'));
+        $this->command->info('Department imported successfully!');
     }
 }

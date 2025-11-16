@@ -15,6 +15,6 @@ class TrainingRepository implements TrainingRepositoryInterface
 
     public function find(int $id)
     {
-        return Training::findOrFail($id);
+        return Training::with(['matrix'])->findOrFail($id);
     }
 }

@@ -12,7 +12,7 @@
             searching: true,
             ordering: true,
             lengthChange: true,  
-            pageLength: 10,      
+            pageLength: 25,      
             order: [[0, "asc"]],
         });
     });

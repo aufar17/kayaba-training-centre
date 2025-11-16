@@ -15,6 +15,7 @@ class Training extends Model
         'name',
         'desc',
         'purpose',
+        'golongan',
         'day_duration',
         'time_duration',
     ];
@@ -22,5 +23,10 @@ class Training extends Model
     public function events(): HasMany
     {
         return $this->hasMany(Event::class, 'id', 'training_id');
+    }
+
+    public function matrix(): HasMany
+    {
+        return $this->hasMany(MatrixTraining::class, 'training_code', 'code');
     }
 }

@@ -2,47 +2,81 @@
 
 namespace App\Imports;
 
+use App\Models\MatrixTraining;
 use App\Models\Training;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\OnEachRow;
+use Maatwebsite\Excel\Row;
 use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 
-class MasterTrainingImport implements ToModel, WithHeadingRow, WithMultipleSheets
+// Gunakan nama heading persis di Excel
+HeadingRowFormatter::default('none');
+
+class MasterTrainingImport implements OnEachRow
 {
-    public function headingRow(): int
+    public function onRow(Row $row)
     {
-        return 1;
-    }
+        $rowIndex = $row->getIndex();
 
+        // Skip heading row (baris 1)
+        if ($rowIndex === 1) {
+            return;
+        }
 
-    public function boot()
-    {
-        HeadingRowFormatter::default('slug');
-    }
+        $row = $row->toArray();
 
-    public function sheets(): array
-    {
-        return [
-            0 => $this,
-        ];
-    }
+        $headings = ['kode', 'program_training', 'golongan', 'department'];
 
-    public function model(array $row)
-    {
+        $row = array_pad($row, count($headings), '');
+        $row = array_combine($headings, $row);
+
+        $code = trim($row['kode'] ?? '');
+        $name = trim($row['program_training'] ?? '');
+        $golongan = trim($row['golongan'] ?? '');
+        $departmentsRaw = $row['department'] ?? '';
+
+        $departments = array_map('trim', explode(',', $departmentsRaw));
+        if (empty($departments)) {
+            $departments = [null];
+        }
+
+        if ($code === '') {
+            echo "Skipping row {$rowIndex}: empty code" . PHP_EOL;
+            return;
+        }
+
+        echo "Processing row {$rowIndex}: code={$code}, departments=" . implode(',', array_map(fn($d) => $d ?? 'NULL', $departments)) . PHP_EOL;
+
         try {
-            return new Training([
-                'code' => $row['kode'] ?? null,
-                'name' => $row['program_training'] ?? null,
-                'desc' => $row['golongan'] ?? null,
-                'purpose' => $row['departement'] ?? null,
-            ]);
-        } catch (\Throwable $e) {
-            Log::error('Gagal import baris training: ' . $e->getMessage(), [
-                'row_data' => $row,
-            ]);
-            return null;
+            $training = Training::updateOrCreate(
+                ['code' => $code],
+                [
+                    'name' => $name,
+                    'golongan' => $golongan
+                ]
+            );
+
+            $matrixData = [];
+            foreach ($departments as $dept) {
+                $matrixData[] = [
+                    'training_code' => $training->code,
+                    'dept' => $dept,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+            }
+
+            MatrixTraining::upsert(
+                $matrixData,
+                ['training_code', 'dept'],
+                ['updated_at']
+            );
+
+            echo "  -> matrix_training upserted" . PHP_EOL;
+        } catch (\Exception $e) {
+            Log::error("Training import error at row {$rowIndex}: " . $e->getMessage(), ['row' => $row]);
+            echo "  !! Error at row {$rowIndex}, see log" . PHP_EOL;
         }
     }
 }

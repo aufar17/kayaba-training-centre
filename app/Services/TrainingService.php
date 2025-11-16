@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Training;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
+use App\Models\MatrixTraining;
 use App\Models\TrainingTransaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -40,9 +41,28 @@ class TrainingService implements TrainingServiceInterface
                 'name' => $data['name'],
                 'desc' => $data['desc'],
                 'purpose' => $data['purpose'],
+                'golongan' => $data['golongan'],
                 'day_duration' => $data['day_duration'],
                 'time_duration' => $data['time_duration'],
             ]);
+
+            if (!empty($data['departments'])) {
+                $matrixData = [];
+                foreach ($data['departments'] as $dept) {
+                    $matrixData[] = [
+                        'training_code' => $training->code,
+                        'dept' => $dept,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+
+                MatrixTraining::upsert(
+                    $matrixData,
+                    ['training_code', 'dept'],
+                    ['updated_at']
+                );
+            }
 
             DB::commit();
             return $training;
@@ -51,6 +71,7 @@ class TrainingService implements TrainingServiceInterface
             throw $e;
         }
     }
+
 
     public function update(int $id, array $data)
     {
@@ -58,7 +79,31 @@ class TrainingService implements TrainingServiceInterface
 
         try {
             $training = Training::findOrFail($id);
-            $training->update($data);
+
+            foreach ($data as $key => $value) {
+                if ($key === 'departments') continue;
+
+                if ($value !== null) {
+                    $training->$key = $value;
+                }
+            }
+            $training->save();
+
+            if (isset($data['departments']) && is_array($data['departments'])) {
+                $selectedDepartments = $data['departments'];
+
+                $existingMatrix = $training->matrix()->pluck('dept')->toArray();
+
+                $toDelete = array_diff($existingMatrix, $selectedDepartments);
+                if (!empty($toDelete)) {
+                    $training->matrix()->whereIn('dept', $toDelete)->delete();
+                }
+
+                $toAdd = array_diff($selectedDepartments, $existingMatrix);
+                foreach ($toAdd as $deptCode) {
+                    $training->matrix()->create(['dept' => $deptCode]);
+                }
+            }
 
             DB::commit();
             return $training;
@@ -67,6 +112,7 @@ class TrainingService implements TrainingServiceInterface
             throw $e;
         }
     }
+
 
     public function delete(int $id): bool
     {
