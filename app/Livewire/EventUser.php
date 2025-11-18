@@ -27,21 +27,24 @@ class EventUser extends Component
     public function getNowEvent()
     {
         $service = $this->service ?? app(EventServiceInterface::class);
-        $now = $service->getNowEvent();
+        $dept = $this->user->dept;
+        $now = $service->getNowEvent($dept);
         return $now;
     }
 
     public function getUpcomingEvent()
     {
         $service = $this->service ?? app(EventServiceInterface::class);
-        $upcoming = $service->getUpcomingEvent();
+        $dept = $this->user->dept;
+        $upcoming = $service->getUpcomingEvent($dept);
         return $upcoming;
     }
 
     public function getPastEvent()
     {
         $service = $this->service ?? app(EventServiceInterface::class);
-        $past = $service->getPastEvent();
+        $dept = $this->user->dept;
+        $past = $service->getPastEvent($dept);
         return $past;
     }
 }

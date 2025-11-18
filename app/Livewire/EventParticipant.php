@@ -254,7 +254,8 @@ class EventParticipant extends Component
     {
         $service = $this->service ?? app(EventServiceInterface::class);
         $id = $this->id;
-        $notif = $service->registerNotification($id);
+        $user = $this->user;
+        $notif = $service->registerNotification($id, $user);
 
         $notif
             ? session()->flash('success', 'Notification sent successfully!')
@@ -266,7 +267,8 @@ class EventParticipant extends Component
     {
         $service = $this->service ?? app(EventServiceInterface::class);
         $id = $this->id;
-        $notif = $service->deptApprovalNotification($id);
+        $user = $this->user;
+        $notif = $service->deptApprovalNotification($id, $user);
 
         $notif
             ? session()->flash('success', 'Notification sent successfully!')
@@ -278,7 +280,8 @@ class EventParticipant extends Component
     {
         $service = $this->service ?? app(EventServiceInterface::class);
         $id = $this->id;
-        $notif = $service->hrdApprovalNotification($id);
+        $user = $this->user;
+        $notif = $service->hrdApprovalNotification($id, $user);
 
         $notif
             ? session()->flash('success', 'Notification sent successfully!')
@@ -290,7 +293,8 @@ class EventParticipant extends Component
     {
         $service = $this->service ?? app(EventServiceInterface::class);
         $id = $this->id;
-        $notif = $service->reportNotification($id);
+        $user = $this->user;
+        $notif = $service->reportNotification($id, $user);
 
         $notif
             ? session()->flash('success', 'Notification sent successfully!')

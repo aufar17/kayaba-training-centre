@@ -12,4 +12,5 @@ interface EventRepositoryInterface
     public function find(int $id);
 
     public function participantModel(): Builder;
+    public function filterByMatrixDepartment(string $dept): Builder;
 }

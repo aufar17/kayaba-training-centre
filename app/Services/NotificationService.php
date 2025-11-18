@@ -3,52 +3,65 @@
 namespace App\Services;
 
 use App\Interfaces\RepositoryInterface\EventRepositoryInterface;
+use App\Interfaces\RepositoryInterface\NotificationRepositoryInterface;
 use App\Interfaces\ServiceInterface\NotificationServiceInterface;
-use App\Models\Location;
-use App\Models\Notification;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
 
 class NotificationService implements NotificationServiceInterface
 {
-    protected EventRepositoryInterface $repository;
+    protected EventRepositoryInterface $eventRepository;
+    protected NotificationRepositoryInterface $notifRepository;
     public function __construct(
-        EventRepositoryInterface $repository,
+        EventRepositoryInterface $eventRepository,
+        NotificationRepositoryInterface $notifRepository,
     ) {
-        $this->repository = $repository;
+        $this->eventRepository = $eventRepository;
+        $this->notifRepository = $notifRepository;
     }
 
-    public function model()
+    public function getAll()
     {
-        return Notification::query();
+        return $this->notifRepository->getAll();
     }
+    public function getById($id)
+    {
+        return $this->notifRepository->find($id);
+    }
+
+    public function eventCreateNotification($user, $role)
+    {
+        if (!in_array($role, ['spv', 'manager'])) {
+            return collect();
+        }
+
+        $dept = $user->dept;
+
+        return $this->notifRepository
+            ->getNotificationsFor($dept, ['event'])
+            ->orderBy('created_at')
+            ->get();
+    }
+
 
     protected function getRegisteredEventId($user)
     {
-        return $this->repository->participantModel()
+        return $this->eventRepository->participantModel()
             ->where('npk', $user->npk)
             ->pluck('event_id')
             ->toArray();
     }
 
-    public function eventCreateNotification($user, $role)
+    public function registerNotificationForManager($role, $user)
     {
-        if (in_array($role, ['spv', 'manager']) || $user->dept === 'HRD') {
-            return $this->model()->where('type', 'event')->get();
+        if (!in_array($role, ['manager'])) {
+            return collect();
         }
-        return collect();
-    }
 
-    public function registerNotificationForManager($role)
-    {
-        if ($role === 'manager') {
-            return $this->model()
-                ->where('type', 'register')
-                ->orderByDesc('created_at')
-                ->get();
-        }
+        $dept = $user->dept;
+
+        return $this->notifRepository
+            ->getNotificationsFor($dept, ['register'])
+            ->orderBy('created_at')
+            ->get();
     }
 
     public function registeredParticipantNotification($user)
@@ -59,17 +72,18 @@ class NotificationService implements NotificationServiceInterface
             return collect();
         }
 
-        return $this->model()
-            ->where('type', 'registered_participant')
-            ->whereIn('event_id', $registeredEventIds)
-            ->orderByDesc('created_at')
+        $dept = $user->dept;
+
+        return $this->notifRepository
+            ->getNotificationsFor($dept, ['registered_participant'])
+            ->orderBy('created_at')
             ->get();
     }
 
     public function deptApprovalNotification($user, $role)
     {
         if ($user->dept === 'HRD') {
-            return $this->model()
+            return $this->getAll()
                 ->where('type', 'dept_approval')
                 ->orderByDesc('created_at')
                 ->get();
@@ -77,14 +91,18 @@ class NotificationService implements NotificationServiceInterface
         return collect();
     }
 
-    public function hrdApprovalNotification($role)
+    public function hrdApprovalNotification($role, $user)
     {
-        if ($role === 'manager') {
-            return $this->model()
-                ->where('type', 'hrd_approval')
-                ->orderByDesc('created_at')
-                ->get();
+        if (!in_array($role, ['manager'])) {
+            return collect();
         }
+
+        $dept = $user->dept;
+
+        return $this->notifRepository
+            ->getNotificationsFor($dept, ['hrd_approval'])
+            ->orderBy('created_at')
+            ->get();
     }
 
     public function fixedParticipantNotification($user)
@@ -95,35 +113,55 @@ class NotificationService implements NotificationServiceInterface
             return collect();
         }
 
-        return $this->model()
+        return $this->getAll()
             ->where('type', 'fixed_participant')
             ->whereIn('event_id', $registeredEventIds)
             ->orderByDesc('created_at')
             ->get();
     }
 
-    public function deptReportNotification($role)
+    public function deptReportNotification($role, $user)
     {
-        if ($role === 'manager') {
-            return $this->model()
-                ->where('type', 'report')
-                ->orderByDesc('created_at')
-                ->get();
+        if (!in_array($role, ['manager'])) {
+            return collect();
         }
+
+        $dept = $user->dept;
+
+        return $this->notifRepository
+            ->getNotificationsFor($dept, ['report'])
+            ->orderBy('created_at')
+            ->get();
     }
 
     public function participantReportNotification($user)
     {
-        $registeredEventIds = $this->getRegisteredEventId($user);
+        $records = $this->eventRepository->participantModel()
+            ->where('npk', $user->npk)
+            ->get(['event_id', 'completed']);
 
-        if (empty($registeredEventIds)) {
-            return collect();
+        $completedEventIds = $records->where('completed', 1)->pluck('event_id')->toArray();
+        $notCompletedEventIds = $records->where('completed', -1)->pluck('event_id')->toArray();
+
+        $notifCompleted = collect();
+        $notifNotCompleted = collect();
+
+        if (!empty($completedEventIds)) {
+            $notifCompleted = $this->getAll()
+                ->where('type', 'participant_completed')
+                ->whereIn('event_id', $completedEventIds)
+                ->orderByDesc('created_at')
+                ->get();
         }
 
-        return $this->model()
-            ->where('type', 'participant_report')
-            ->whereIn('event_id', $registeredEventIds)
-            ->orderByDesc('created_at')
-            ->get();
+        if (!empty($notCompletedEventIds)) {
+            $notifNotCompleted = $this->getAll()
+                ->where('type', 'participant_notcompleted')
+                ->whereIn('event_id', $notCompletedEventIds)
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        return $notifCompleted->merge($notifNotCompleted);
     }
 }

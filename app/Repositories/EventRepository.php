@@ -12,7 +12,7 @@ class EventRepository implements EventRepositoryInterface
 {
     public function getModel(): Builder
     {
-        return Event::query();
+        return Event::query()->with(['trainings.matrix', 'organizers', 'trainers', 'locations']);
     }
 
     public function find(int $id)
@@ -23,5 +23,13 @@ class EventRepository implements EventRepositoryInterface
     public function participantModel(): Builder
     {
         return EventTransaction::query();
+    }
+
+    public function filterByMatrixDepartment(string $dept): Builder
+    {
+        return $this->getModel()
+            ->whereHas('trainings.matrix', function ($q) use ($dept) {
+                $q->where('dept', $dept);
+            });
     }
 }

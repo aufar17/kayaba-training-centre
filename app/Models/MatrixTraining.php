@@ -14,7 +14,7 @@ class MatrixTraining extends Model
         'dept'
     ];
 
-    public function dept(): BelongsTo
+    public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class, 'dept', 'name');
     }

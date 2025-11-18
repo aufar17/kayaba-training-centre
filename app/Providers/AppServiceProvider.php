@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Interfaces\RepositoryInterface\EventRepositoryInterface;
 use App\Interfaces\RepositoryInterface\LocationRepositoryInterface;
+use App\Interfaces\RepositoryInterface\NotificationRepositoryInterface;
 use App\Interfaces\RepositoryInterface\OrganizerRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainerRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
@@ -16,6 +17,7 @@ use App\Interfaces\ServiceInterface\TrainerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
 use App\Repositories\EventRepository;
 use App\Repositories\LocationRepository;
+use App\Repositories\NotificationRepository;
 use App\Repositories\OrganizerRepository;
 use App\Repositories\TrainerRepository;
 use App\Repositories\TrainingRepository;
@@ -52,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OrganizerRepositoryInterface::class, OrganizerRepository::class);
         $this->app->bind(TrainerRepositoryInterface::class, TrainerRepository::class);
         $this->app->bind(EventRepositoryInterface::class, EventRepository::class);
+        $this->app->bind(NotificationRepositoryInterface::class, NotificationRepository::class);
     }
 
     /**

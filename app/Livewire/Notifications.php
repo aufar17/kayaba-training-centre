@@ -6,60 +6,82 @@ use App\Interfaces\ServiceInterface\NotificationServiceInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Component;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Livewire\WithPagination;
 
 class Notifications extends Component
 {
     public $user;
     public $role;
+    public $page;
+    public $perPage = 20;
+
+    use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
+
     protected NotificationServiceInterface $service;
 
     public function mount()
     {
         $this->service = app(NotificationServiceInterface::class);
-        $this->role = $this->checkRole();
+        $this->role = $this->user->getUserRole();
     }
 
     public function render()
     {
-        $notifications = $this->getAllNotifications()
-            ->map(fn($notif) => $this->mapping($notif));
+        $notifications = $this->paginateNotifications();
 
         return view('livewire.notifications', [
             'notifications' => $notifications,
         ]);
     }
 
-    public function checkRole()
+
+    public function setPage($page)
     {
-        $user = $this->user;
-        $role = $this->user->getUserRole();
-        return $role;
+        $this->page = $page;
     }
+
+    protected function paginateNotifications(): LengthAwarePaginator
+    {
+        $collection = $this->getAllNotifications();
+
+        $currentPage = $this->page;
+        $offset = ($currentPage - 1) * $this->perPage;
+
+        return new LengthAwarePaginator(
+            $collection->slice($offset, $this->perPage)->values(),
+            $collection->count(),
+            $this->perPage,
+            $currentPage,
+            ['path' => request()->url()]
+        );
+    }
+
 
     protected function getAllNotifications(): Collection
     {
-        $service = $this->service;
+
+        $service = $this->service ?? app(NotificationServiceInterface::class);
         $user = $this->user;
         $role = $this->role;
 
-        $notifications = collect([
+        return collect([
             $service->eventCreateNotification($user, $role),
-            $service->registerNotificationForManager($role),
+            $service->registerNotificationForManager($role, $user),
             $service->registeredParticipantNotification($user),
             $service->deptApprovalNotification($user, $role),
-            $service->hrdApprovalNotification($role),
+            $service->hrdApprovalNotification($role, $user),
             $service->fixedParticipantNotification($user),
-            $service->deptReportNotification($role),
+            $service->deptReportNotification($role, $user),
             $service->participantReportNotification($user),
-        ]);
-
-        return $notifications
+        ])
             ->filter()
             ->flatten()
             ->sortByDesc('created_at')
             ->values();
     }
-
     protected function mapping($notif): array
     {
         $createdAt = $notif->created_at instanceof Carbon
@@ -69,61 +91,58 @@ class Notifications extends Component
         $displayTime = $createdAt->diffInDays(now()) < 7
             ? $createdAt->diffForHumans()
             : $createdAt->format('d M Y, H:i');
+
         $type = $notif->type ?? 'default';
 
         $map = [
             'event' => [
                 'icon' => 'fa-solid fa-bell',
                 'color' => 'info',
-                'url' => 'event-participant',
             ],
             'register' => [
                 'icon' => 'fa-solid fa-user-plus',
                 'color' => 'warning',
-                'url' => 'event-participant',
             ],
             'registered_participant' => [
                 'icon' => 'fa-solid fa-user-plus',
                 'color' => 'warning',
-                'url' => 'event-participant',
             ],
             'dept_approval' => [
                 'icon' => 'fa-solid fa-user-check',
                 'color' => 'success',
-                'url' => 'event-participant',
             ],
             'hrd_approval' => [
                 'icon' => 'fa-solid fa-clipboard-check',
                 'color' => 'success',
-                'url' => 'event-participant',
             ],
             'fixed_participant' => [
                 'icon' => 'fa-solid fa-clipboard-check',
                 'color' => 'success',
-                'url' => 'event-participant',
             ],
             'report' => [
                 'icon' => 'fa-solid fa-file-lines',
                 'color' => 'warning',
-                'url' => 'event-participant',
             ],
-            'participant_report' => [
+
+            'participant_completed' => [
                 'icon' => 'fa-solid fa-file-signature',
                 'color' => 'primary',
-                'url' => 'event-participant',
+            ],
+
+            'participant_not_completed' => [
+                'icon' => 'fa-solid fa-file-signature',
+                'color' => 'primary',
             ],
             'default' => [
                 'icon' => 'fa-solid fa-info-circle',
                 'color' => 'secondary',
-                'url' => 'event-participant',
             ],
         ];
 
         return array_merge($notif->toArray(), [
-            'time' => $notif->created_at->diffForHumans(),
-            'icon' => $map[$type]['icon'] ?? $map['default']['icon'],
+            'time'  => $displayTime,
+            'icon'  => $map[$type]['icon'] ?? $map['default']['icon'],
             'color' => $map[$type]['color'] ?? $map['default']['color'],
-            'url' => $map[$type]['url'] ?? $map['default']['url'],
         ]);
     }
 }

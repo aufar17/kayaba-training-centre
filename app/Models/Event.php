@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
 {
@@ -22,6 +23,12 @@ class Event extends Model
         'end_time',
     ];
 
+
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(EventTransaction::class, 'event_id', 'id');
+    }
     public function trainings(): BelongsTo
     {
         return $this->belongsTo(Training::class, 'training_id', 'id');
