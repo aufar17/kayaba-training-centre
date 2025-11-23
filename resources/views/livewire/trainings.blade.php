@@ -26,10 +26,7 @@
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td class="text-center">{{ $training->code }}</td>
                         <td class="text-center">{{ $training->name }}</td>
-                        <td class="text-center">{{ $training->day_duration ?? '-' }} Days / {{ $training->time_duration
-                            ?? '-' }}
-                            Hours
-                        </td>
+                        <td class="text-center">{{ $training->duration ?? '-' }} </td>
                         <td class="text-center">
                             <a href="{{ route('training-content',$training->id) }}"
                                 class="badge bg-gradient-info border-0 shadow-xl">

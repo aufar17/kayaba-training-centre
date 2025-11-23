@@ -19,21 +19,23 @@ class MasterTrainingImport implements OnEachRow
     {
         $rowIndex = $row->getIndex();
 
-        // Skip heading row (baris 1)
         if ($rowIndex === 1) {
             return;
         }
 
         $row = $row->toArray();
 
-        $headings = ['kode', 'program_training', 'golongan', 'department'];
+        $headings = ['kode', 'program_training', 'golongan', 'department', 'purpose', 'duration'];
 
+        $row = array_slice($row, 0, count($headings));
         $row = array_pad($row, count($headings), '');
         $row = array_combine($headings, $row);
-
+        
         $code = trim($row['kode'] ?? '');
         $name = trim($row['program_training'] ?? '');
         $golongan = trim($row['golongan'] ?? '');
+        $purpose = trim($row['purpose'] ?? '');
+        $duration = trim($row['duration'] ?? '');
         $departmentsRaw = $row['department'] ?? '';
 
         $departments = array_map('trim', explode(',', $departmentsRaw));
@@ -53,7 +55,9 @@ class MasterTrainingImport implements OnEachRow
                 ['code' => $code],
                 [
                     'name' => $name,
-                    'golongan' => $golongan
+                    'golongan' => $golongan,
+                    'purpose' => $purpose,
+                    'duration' => $duration
                 ]
             );
 

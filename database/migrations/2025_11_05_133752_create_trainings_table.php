@@ -18,8 +18,7 @@ return new class extends Migration
             $table->text('desc')->nullable();
             $table->text('purpose')->nullable();
             $table->string('golongan')->nullable();
-            $table->text('day_duration')->nullable();
-            $table->text('time_duration')->nullable();
+            $table->string('duration')->nullable();
             $table->timestamps();
         });
     }

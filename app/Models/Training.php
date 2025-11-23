@@ -16,8 +16,7 @@ class Training extends Model
         'desc',
         'purpose',
         'golongan',
-        'day_duration',
-        'time_duration',
+        'duration',
     ];
 
     public function events(): HasMany
