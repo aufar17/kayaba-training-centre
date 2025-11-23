@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 class TrainingController extends Controller
 {
 
-
     public function session()
     {
         $user = Auth::user();

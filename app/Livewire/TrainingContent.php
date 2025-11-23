@@ -12,6 +12,7 @@ class TrainingContent extends Component
     use WithFileUploads;
 
     public $id;
+    public $user;
     public $pdf_file;
 
     protected $rules = [
@@ -30,9 +31,12 @@ class TrainingContent extends Component
         $data = [
             'training' => $this->getTraining($this->id),
             'files' => $this->getContent($this->id),
+            'user' => $this->user
         ];
+
         return view('livewire.training-content', $data);
     }
+
 
     public function getTraining($id)
     {

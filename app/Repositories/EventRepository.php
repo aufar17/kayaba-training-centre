@@ -29,7 +29,10 @@ class EventRepository implements EventRepositoryInterface
     {
         return $this->getModel()
             ->whereHas('trainings.matrix', function ($q) use ($dept) {
-                $q->where('dept', $dept);
+                $q->when($dept !== 'ALL', function ($q2) use ($dept) {
+                    $q2->where('dept', $dept)
+                        ->orWhere('dept', 'ALL');
+                });
             });
     }
 }

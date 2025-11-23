@@ -1,14 +1,58 @@
 <div>
-    <h5 class="text-uppercase text-black fw-bolder mb-3" style="letter-spacing: 2px">> {{ $training->name }}</h5>
     @if (session('success'))
     <div class="alert alert-success text-white fw-bold">{{ session('success') }}</div>
     @endif
     @if (session('error'))
     <div class="alert alert-danger text-white fw-bold">{{ session('error') }}</div>
     @endif
+    <div class="row g-4 mb-5">
+        <div class="col-md-12">
+            <div class="card h-100 border rounded-2 shadow">
+                <div class="card-body">
+                    <h5 class="card-title fw-bolder mb-4 text-uppercase" style="letter-spacing: 2px">
+                        > {{ $training->code }} - {{$training->name?? '-' }}
+                    </h5>
+
+                    <ul class="list-unstyled mb-3">
+                        <li class="mb-2 d-flex">
+                            <span class="fw-bold me-4" style="min-width: 90px;">Description</span>
+                            <span>{{ $training->desc ?? '-' }}</span>
+                        </li>
+                        <hr class="my-2">
+                        <li class="mb-2 d-flex">
+                            <span class="fw-bold me-4" style="min-width: 90px;">Purpose</span>
+                            <span>{{ $training->purpose ?? '-' }}</span>
+                        </li>
+                        <hr class="my-2">
+                        <li class="mb-2 d-flex">
+                            <span class="fw-bold me-4" style="min-width: 90px;">Duration</span>
+                            <span>{{ $training->duration ?? '-' }}</span>
+                        </li>
+                        <hr class="my-2">
+                        <li class="mb-2 d-flex">
+                            <span class="fw-bold me-3" style="min-width: 90px;">Departments</span>
+                            <span>
+                                @php
+                                $departments = $training->matrix->pluck('dept')->filter()->toArray();
+                                @endphp
+                                @if(!empty($departments))
+                                {{ implode(', ', $departments) }}
+                                @else
+                                N/A
+                                @endif
+                            </span>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if($user->dept == 'HRD')
     <form wire:submit.prevent="save">
         <div class="mb-4">
-            <label class="form-label fw-bold text-uppercase">Upload Content</label>
+            <span class="fw-bold text-uppercase">Upload Content</span>
 
             <div class="border border-2 border-dashed rounded-3 text-center p-3 bg-light position-relative">
                 @if (!$pdf_file)
@@ -24,7 +68,6 @@
                     <input type="file" id="pdfUpload" class="d-none" accept="application/pdf" wire:model.live="pdf_file"
                         required>
                 </div>
-
                 @else
                 <div class="d-flex flex-column align-items-center justify-content-center py-3">
                     <i class="fa-solid fa-check-circle text-success fs-4 mb-2"></i>
@@ -32,7 +75,7 @@
                     <small class="text-muted">{{ $pdf_file->getClientOriginalName() }}</small>
 
                     <div class="mt-3">
-                        <label for="pdfUpload" class="btn btn-outline-dark  btn-sm px-3 py-2 cursor-pointer">
+                        <label for="pdfUpload" class="btn btn-outline-dark btn-sm px-3 py-2 cursor-pointer">
                             <i class="fa-solid fa-repeat me-1"></i>Change File
                         </label>
                         <input type="file" id="pdfUpload" class="d-none" accept="application/pdf"
@@ -41,13 +84,20 @@
                 </div>
                 @endif
             </div>
+
+            <small class="text-danger d-block mt-2">
+                <i class="fa-solid fa-circle-info"></i>
+                Please wait until the file preview appears.
+            </small>
         </div>
+
         <div class="mt-4 text-end">
             <button wire:click="save" class="btn btn-success px-4">
                 <i class="bi bi-save me-2"></i>Save
             </button>
         </div>
     </form>
+    @endif
 
     <hr class="my-5">
 
