@@ -127,6 +127,7 @@ class EventService implements EventServiceInterface
                 'end_time' => $data['end_time'],
             ]);
 
+
             $event = Event::where('id', $create->id)->with(['trainings', 'locations', 'organizers', 'trainers'])->first();
             $targets = MatrixTraining::where('training_code', $event->trainings->code)->get();
 
@@ -386,7 +387,7 @@ class EventService implements EventServiceInterface
 
         try {
             $participant = $this->repository->participantModel()->create([
-                'event_id' => $data['event_id'],
+                'event_id' => $data['code'],
                 'npk' => $data['npk'],
                 'approval' => 0,
                 'completed' => 0,

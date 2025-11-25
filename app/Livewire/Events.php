@@ -56,9 +56,10 @@ class Events extends Component
 
     public function render()
     {
-        return view('livewire.events', [
+        $data = [
             'events' => $this->getEvents(),
-        ]);
+        ];
+        return view('livewire.events', $data);
     }
 
     public function getEvents()

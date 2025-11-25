@@ -31,19 +31,19 @@ class Event extends Model
     }
     public function trainings(): BelongsTo
     {
-        return $this->belongsTo(Training::class, 'training_id', 'id');
+        return $this->belongsTo(Training::class, 'training_id', 'code');
     }
     public function locations(): BelongsTo
     {
-        return $this->belongsTo(Location::class, 'location_id', 'id');
+        return $this->belongsTo(Location::class, 'location_id', 'code');
     }
     public function organizers(): BelongsTo
     {
-        return $this->belongsTo(Organizer::class, 'organizer_id', 'id');
+        return $this->belongsTo(Organizer::class, 'organizer_id', 'code');
     }
     public function trainers(): BelongsTo
     {
-        return $this->belongsTo(Trainer::class, 'trainer_id', 'id');
+        return $this->belongsTo(Trainer::class, 'trainer_id', 'code');
     }
 
     public function startDateFormat(): string

@@ -86,7 +86,7 @@
                                             wire:change="checkTraining">
                                             <option value="">-- Select Training --</option>
                                             @foreach($trainings as $training)
-                                            <option value="{{ $training->id }}">{{ $training->name }}</option>
+                                            <option value="{{ $training->code }}">{{ $training->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
@@ -112,7 +112,7 @@
                                             wire:change="checkLocation">
                                             <option value="">-- Select Location --</option>
                                             @foreach($locations as $location)
-                                            <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                            <option value="{{ $location->code }}">{{ $location->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
@@ -136,7 +136,7 @@
                                             wire:change="checkOrganizer">
                                             <option value="">-- Select Organizer --</option>
                                             @foreach($organizers as $organizer)
-                                            <option value="{{ $organizer->id }}">{{ $organizer->name }}</option>
+                                            <option value="{{ $organizer->code }}">{{ $organizer->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
@@ -160,7 +160,7 @@
                                             wire:change="checkTrainer">
                                             <option value="">-- Select Trainer --</option>
                                             @foreach($trainers as $trainer)
-                                            <option value="{{ $trainer->id }}">{{ $trainer->name }}</option>
+                                            <option value="{{ $trainer->code }}">{{ $trainer->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
@@ -342,7 +342,7 @@
                                             wire:change="checkTraining">
                                             <option value="">-- Select Training --</option>
                                             @foreach($trainings as $training)
-                                            <option value="{{ $training->id }}">{{ $training->name }}</option>
+                                            <option value="{{ $training->code }}">{{ $training->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
@@ -369,7 +369,7 @@
                                             wire:change="checkLocation">
                                             <option value="">-- Select Location --</option>
                                             @foreach($locations as $location)
-                                            <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                            <option value="{{ $location->code }}">{{ $location->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
@@ -394,7 +394,7 @@
                                             wire:change="checkOrganizer">
                                             <option value="">-- Select Organizer --</option>
                                             @foreach($organizers as $organizer)
-                                            <option value="{{ $organizer->id }}">{{ $organizer->name }}</option>
+                                            <option value="{{ $organizer->code }}">{{ $organizer->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
@@ -419,7 +419,7 @@
                                             wire:change="checkTrainer">
                                             <option value="">-- Select Trainer --</option>
                                             @foreach($trainers as $trainer)
-                                            <option value="{{ $trainer->id }}">{{ $trainer->name }}</option>
+                                            <option value="{{ $trainer->code }}">{{ $trainer->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>

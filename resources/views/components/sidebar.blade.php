@@ -17,7 +17,9 @@
     <hr class="horizontal dark mt-0">
     <div class="collapse navbar-collapse  w-auto  max-height-vh-100 h-100" id="sidenav-collapse-main">
         <ul class="navbar-nav">
+            @if($user->dept == 'HRD')
             <x-navlink href="{{ route('index') }}" :active="request()->is('/') " icon="fa-house">Dashboard</x-navlink>
+            @endif
 
             <li class="nav-item mt-3">
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Main Features</h6>
