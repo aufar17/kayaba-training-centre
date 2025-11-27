@@ -283,6 +283,30 @@ class EventService implements EventServiceInterface
         }
     }
 
+    public function getLatestNowEvent()
+    {
+        $today = today();
+
+        return $this->repository
+            ->getModel()
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->orderByDesc('start_date')
+            ->first();
+    }
+
+
+    public function getLatestUpcomingEvent()
+    {
+        $today = today();
+
+        return $this->repository
+            ->getModel()
+            ->whereDate('start_date', '>', $today)
+            ->orderByDesc('start_date')
+            ->first();
+    }
+
     public function getNowEvent($dept)
     {
         $today = today();

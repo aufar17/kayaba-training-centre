@@ -108,9 +108,16 @@
                                 <i class="fa-solid fa-chalkboard-user text-success fs-4 me-3"></i>
                                 <div class="d-flex flex-column">
                                     <h6 class="mb-0">{{ $event->trainings->code }} - {{ $event->trainings->name }}</h6>
-
+                                    <span class="text-muted small">
+                                        <i class="fa-regular fa-calendar-days me-1"></i>
+                                        {{ $event->startDateFormat() }} - {{ $event->endDateFormat() }}
+                                    </span>
+                                    <span class="text-muted small">
+                                        <i class="fa-solid fa-people-group me-1"></i> {{ $event->organizers->name ??
+                                        'N/A' }}
+                                    </span>
                                     <a href="{{ route('event-participant', $event->id) }}"
-                                        class="badge bg-gradient-info border-0 mt-1 align-self-start text-uppercase">
+                                        class="badge bg-gradient-info border-0 mt-2 align-self-start text-uppercase">
                                         <i class="fa-solid fa-eye"></i> View
                                     </a>
                                 </div>

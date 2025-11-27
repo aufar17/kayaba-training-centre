@@ -15,6 +15,8 @@ interface EventServiceInterface
     public function update(int $id, array $data);
 
     public function delete(int $id): bool;
+    public function getLatestNowEvent();
+    public function getLatestUpcomingEvent();
     public function getNowEvent($dept);
     public function getUpcomingEvent($dept);
     public function getPastEvent($dept);

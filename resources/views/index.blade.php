@@ -1,5 +1,3 @@
 <x-layout.app :user="$user" nav="Dashboard">
-    @if ($user->dept == 'HRD')
-    <livewire:kpi />
-    @endif
+    <livewire:dashboard />
 </x-layout.app>
