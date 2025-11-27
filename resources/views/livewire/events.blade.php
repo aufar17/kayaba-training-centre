@@ -5,8 +5,12 @@
         @endslot
 
         @slot('body')
-        <button class="btn btn-success border-0 mb-5" data-bs-toggle="modal" data-bs-target="#newEventModal">
+        <button class="btn btn-success border-0 mb-5 me-2" data-bs-toggle="modal" data-bs-target="#newEventModal">
             <i class="fa-solid fa-plus me-1"></i> New
+        </button>
+
+        <button class="btn btn-info border-0 mb-5" data-bs-toggle="modal" data-bs-target="#excelImportModal">
+            <i class="fa-solid fa-file-excel me-1"></i> Upload Excel
         </button>
 
         <div class="table-responsive">
@@ -28,10 +32,10 @@
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td class="text-center">{{ $event->code }}</td>
-                        <td class="text-center">{{ $event->trainings->name }}</td>
-                        <td class="text-center">{{ $event->organizers->name }}</td>
+                        <td class="text-center text-wrap">{{ $event->trainings->name }}</td>
+                        <td class="text-center">{{ $event->organizers->name ?? 'N/A' }}</td>
                         <td class="text-center">{{ $event->locations->name }}</td>
-                        <td class="text-center">{{ $event->start_date }} - {{ $event->end_date }}</td>
+                        <td class="text-center">{{ $event->startDateFormat() }} - {{ $event->endDateFormat() }}</td>
                         <td class="text-center">{{ $event->start_time }} - {{ $event->end_time }}</td>
                         <td class="text-center">
                             <a href="{{ route('event-participant',$event->id) }}"
@@ -582,6 +586,45 @@
                     <div class="modal-footer border-1">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-danger" wire:click="delete">Yes, Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="modal fade" id="excelImportModal" tabindex="-1" aria-labelledby="excelImportModalLabel"
+                aria-hidden="true" wire:ignore.self>
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 rounded-4">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold" id="excelImportModalLabel">
+                                Import Historical Training
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <form action="{{ route('event-import') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+
+                            <div class="modal-body">
+                                <label class="form-label fw-semibold">Upload File Excel</label>
+                                <input type="file" name="file" class="form-control" accept=".xlsx, .xls" required>
+                                @error('file')
+                                <span class="text-danger small">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light border-0" data-bs-dismiss="modal">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fa-solid fa-upload me-1"></i> Import
+                                </button>
+                            </div>
+                        </form>
+
                     </div>
                 </div>
             </div>

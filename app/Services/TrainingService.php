@@ -42,8 +42,7 @@ class TrainingService implements TrainingServiceInterface
                 'desc' => $data['desc'],
                 'purpose' => $data['purpose'],
                 'golongan' => $data['golongan'],
-                'day_duration' => $data['day_duration'],
-                'time_duration' => $data['time_duration'],
+                'duration' => $data['duration'],
             ]);
 
             if (!empty($data['departments'])) {

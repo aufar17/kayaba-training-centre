@@ -46,7 +46,7 @@ class EventService implements EventServiceInterface
     {
         return $this->repository
             ->getModel()
-            ->latest()
+            ->orderBy('code', 'desc')
             ->get();
     }
     public function getById(int $id)
@@ -323,10 +323,11 @@ class EventService implements EventServiceInterface
 
     public function getParticipants($id)
     {
+        $event = $this->repository->find($id);
         $query = $this->repository
             ->participantModel()
             ->with(['event', 'user'])
-            ->where('event_id', $id)
+            ->where('event_id', $event->code)
             ->where('approval', '>', 0);
 
         return $query->get();
@@ -335,10 +336,12 @@ class EventService implements EventServiceInterface
     public function getParticipantbyDept($id)
     {
         $dept = Auth::user()->dept;
+        $event = $this->repository->find($id);
+
         $participants = $this->repository
             ->participantModel()
             ->with(['event', 'user'])
-            ->where('event_id', $id)
+            ->where('event_id', $event->code)
             ->where('approval', '>=', 0)
             ->get();
 
@@ -347,11 +350,13 @@ class EventService implements EventServiceInterface
     public function getHistoryApprovalbyDept($id)
     {
         $dept = Auth::user()->dept;
+        $event = $this->repository->find($id);
+
 
         $participants = $this->repository
             ->participantModel()
             ->with(['event', 'user'])
-            ->where('event_id', $id)
+            ->where('event_id', $event->code)
             ->get();
 
         if ($dept == 'HRD') {

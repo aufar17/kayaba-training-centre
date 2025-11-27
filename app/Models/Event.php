@@ -27,7 +27,7 @@ class Event extends Model
 
     public function transactions(): HasMany
     {
-        return $this->hasMany(EventTransaction::class, 'event_id', 'id');
+        return $this->hasMany(EventTransaction::class, 'event_id', 'code');
     }
     public function trainings(): BelongsTo
     {

@@ -1,4 +1,50 @@
 <div>
+    <div class="card shadow-sm rounded-4 border-0 mb-4">
+        <div class="card-header border-0 rounded-top-4"
+            style="background: linear-gradient(135deg, #d9e9ff, #b9d7ff, #9bc5ff);">
+            <h5 class="text-uppercase text-black fw-bolder mb-0" style="letter-spacing: 2px;">
+                > {{ $event->trainings->name }}
+            </h5>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-4 align-items-start">
+                <div class="col-md-9">
+                    <table class="table table-borderless mb-0 small align-middle">
+                        <tr>
+                            <td class="text-bold w-20">Code</td>
+                            <td class="fw-semibold text-black">{{ $event->trainings->code ?? '-' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-bold w-20">Description</td>
+                            <td class="fw-semibold text-black text-wrap">{{ $event->trainings->desc ?? '-' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-bold w-20">Purpose</td>
+                            <td class="fw-semibold text-black text-wrap">{{ $event->trainings->purpose ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-bold w-20">Matrix</td>
+                            <td class="fw-semibold text-black text-wrap">
+                                @if ($event->trainings->matrix && $event->trainings->matrix->count())
+                                {{ $event->trainings->matrix->pluck('dept')->implode(', ') }}
+                                @else
+                                -
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-bold w-20">Golongan</td>
+                            <td class="fw-semibold text-black text-wrap">{{ $event->trainings->golongan ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <x-card :icon="'fa-table'">
         @slot('title')
         {{ $event->code }} - {{ $event->trainings->name }}
@@ -36,18 +82,18 @@
         <button type="button" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#historyApprovalModal">
             <i class="fa-solid fa-clock-rotate-left me-2"></i>History Approval
         </button>
-        @if ($this->role === 'spv' && !$registerNotif)
+        @if ($this->role === 'spv' && !$registerNotif && $event->status == 'upcoming')
         <button type="button" class="btn btn-success" wire:click="registerNotification">
             <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
         </button>
         @endif
-        @if ($this->role === 'manager' && !$deptApprovalNotif)
+        @if ($this->role === 'manager' && !$deptApprovalNotif && $event->status == 'upcoming')
         <button type="button" class="btn btn-success" wire:click="deptApprovalNotification">
             <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
         </button>
         @endif
         @if ($user->dept === 'HRD')
-        @if (!$hrdApprovalNotif)
+        @if (!$hrdApprovalNotif && $event->status == 'upcoming')
         <button type="button" class="btn btn-success" wire:click="hrdApprovalNotification">
             <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
         </button>
@@ -89,8 +135,8 @@
                     <tr>
                         <td class="text-center align-middle">{{ $loop->iteration }}</td>
                         <td class="text-center align-middle">{{ $participant->npk }}</td>
-                        <td class="text-center align-middle">{{ $participant->user->full_name }}</td>
-                        <td class="text-center align-middle">{{ $participant->user->dept }}</td>
+                        <td class="text-center align-middle">{{ $participant->user->full_name ?? '-' }}</td>
+                        <td class="text-center align-middle">{{ $participant->user->dept ?? '-' }}</td>
                         @if ($event->status == 'upcoming')
                         @if ($this->role == 'spv')
                         <td class="text-center align-middle">
@@ -180,9 +226,9 @@
                                     @forelse($histories as $history)
                                     <tr>
                                         <td class="text-center">{{ $loop->iteration }}</td>
-                                        <td class="text-center">{{ $history->user->npk }}</td>
-                                        <td class="text-center">{{ $history->user->full_name }}</td>
-                                        <td class="text-center">{{ $history->user->dept }}</td>
+                                        <td class="text-center">{{ $history->npk }}</td>
+                                        <td class="text-center">{{ $history->user->full_name ?? '-' }}</td>
+                                        <td class="text-center">{{ $history->user->dept ?? '-' }}</td>
                                         <td class="text-center">
                                             @php
                                             $action = $this->approvalAction($history);

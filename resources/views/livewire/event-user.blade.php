@@ -87,6 +87,10 @@
                                 </li>
                             </ul>
                             <div class="d-flex justify-content-end">
+                                <a href="{{ route('training-content', $now->id) }}"
+                                    class="btn btn-info btn-sm me-2 shadow-lg">
+                                    <i class="fa-solid fa-file me-1"></i> View
+                                </a>
                                 <a href="{{ route('event-participant', $now->id) }}"
                                     class="btn btn-success btn-sm shadow-lg">
                                     <i class="fa-solid fa-eye me-1"></i> View
@@ -136,6 +140,10 @@
                                 </li>
                             </ul>
                             <div class="d-flex justify-content-end">
+                                <a href="{{ route('training-content', $upcoming->id) }}"
+                                    class="btn btn-info btn-sm me-2 shadow-lg">
+                                    <i class="fa-solid fa-file me-1"></i> View
+                                </a>
                                 <a href="{{ route('event-participant', $upcoming->id) }}"
                                     class="btn btn-info btn-sm shadow-lg">
                                     <i class="fa-solid fa-cash-register me-1"></i> Register
@@ -184,6 +192,10 @@
                                 </li>
                             </ul>
                             <div class="d-flex justify-content-end">
+                                <a href="{{ route('training-content', $past->id) }}"
+                                    class="btn btn-info btn-sm me-2 shadow-lg">
+                                    <i class="fa-solid fa-file me-1"></i> View
+                                </a>
                                 <a href="{{ route('event-participant', $past->id) }}"
                                     class="btn btn-secondary btn-sm shadow-lg">
                                     <i class="fa-solid fa-eye me-1"></i> View

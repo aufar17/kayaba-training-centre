@@ -12,6 +12,7 @@ class TrainingContent extends Component
     use WithFileUploads;
 
     public $id;
+    public $user;
     public $pdf_file;
 
     protected $rules = [

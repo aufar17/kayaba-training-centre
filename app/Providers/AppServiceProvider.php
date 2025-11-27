@@ -9,6 +9,7 @@ use App\Interfaces\RepositoryInterface\OrganizerRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainerRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
 use App\Interfaces\ServiceInterface\DashboardServiceInterface;
+use App\Interfaces\ServiceInterface\EventImportServiceInterface;
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Interfaces\ServiceInterface\LocationServiceInterface;
 use App\Interfaces\ServiceInterface\NotificationServiceInterface;
@@ -22,6 +23,7 @@ use App\Repositories\OrganizerRepository;
 use App\Repositories\TrainerRepository;
 use App\Repositories\TrainingRepository;
 use App\Services\DashboardService;
+use App\Services\EventImportService;
 use App\Services\EventService;
 use App\Services\LocationService;
 use App\Services\NotificationService;
@@ -47,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(EventServiceInterface::class, EventService::class);
         $this->app->bind(DashboardServiceInterface::class, DashboardService::class);
         $this->app->bind(NotificationServiceInterface::class, NotificationService::class);
+        $this->app->bind(EventImportServiceInterface::class, EventImportService::class);
 
         //Repository
         $this->app->bind(TrainingRepositoryInterface::class, TrainingRepository::class);

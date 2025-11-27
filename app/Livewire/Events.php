@@ -2,15 +2,21 @@
 
 namespace App\Livewire;
 
+use App\Imports\EventImport;
+use App\Interfaces\ServiceInterface\EventImportServiceInterface;
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Interfaces\ServiceInterface\LocationServiceInterface;
 use App\Interfaces\ServiceInterface\OrganizerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Events extends Component
 {
+    use WithFileUploads;
+
+    public $file;
     public $code, $training, $location, $organizer, $trainer;
     public $start_date, $end_date, $start_time, $end_time;
     public $eventId;
@@ -39,6 +45,7 @@ class Events extends Component
     protected OrganizerServiceInterface $organizerService;
     protected TrainerServiceInterface $trainerService;
     protected LocationServiceInterface $locationService;
+    protected EventImportServiceInterface $importService;
 
     public function mount()
     {
@@ -47,6 +54,7 @@ class Events extends Component
         $this->organizerService = app(OrganizerServiceInterface::class);
         $this->trainerService = app(TrainerServiceInterface::class);
         $this->locationService = app(LocationServiceInterface::class);
+        $this->importService = app(EventImportServiceInterface::class);
 
         $this->trainings = $this->trainingService->getAll();
         $this->organizers = $this->organizerService->getAll();
