@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Interfaces\RepositoryInterface\EventRepositoryInterface;
 use App\Interfaces\RepositoryInterface\NotificationRepositoryInterface;
 use App\Interfaces\ServiceInterface\NotificationServiceInterface;
+use App\Models\Event;
+use App\Models\EventTransaction;
+use App\Models\Notification;
 
 class NotificationService implements NotificationServiceInterface
 {
@@ -113,12 +116,26 @@ class NotificationService implements NotificationServiceInterface
             return collect();
         }
 
+        $approvedEventIds = EventTransaction::whereIn('event_id', $registeredEventIds)
+            ->where('npk', $user->npk)
+            ->where('approval', 2)
+            ->pluck('event_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+
+        if (empty($approvedEventIds)) {
+            return collect();
+        }
+
         return $this->getAll()
             ->where('type', 'fixed_participant')
-            ->whereIn('event_id', $registeredEventIds)
+            ->whereIn('event_id', $approvedEventIds)
             ->orderByDesc('created_at')
             ->get();
     }
+
 
     public function deptReportNotification($role, $user)
     {
@@ -140,28 +157,33 @@ class NotificationService implements NotificationServiceInterface
             ->where('npk', $user->npk)
             ->get(['event_id', 'completed']);
 
-        $completedEventIds = $records->where('completed', 1)->pluck('event_id')->toArray();
-        $notCompletedEventIds = $records->where('completed', -1)->pluck('event_id')->toArray();
+        $completedCode = $records->where('completed', 1)->pluck('event_id');
+        $notCompletedCode = $records->where('completed', -1)->pluck('event_id');
 
         $notifCompleted = collect();
         $notifNotCompleted = collect();
 
-        if (!empty($completedEventIds)) {
+        if (!empty($completedCode)) {
             $notifCompleted = $this->getAll()
                 ->where('type', 'participant_completed')
-                ->whereIn('event_id', $completedEventIds)
+                ->whereIn('event_id', $completedCode)
                 ->orderByDesc('created_at')
                 ->get();
         }
 
-        if (!empty($notCompletedEventIds)) {
+        if (!empty($notCompletedCode)) {
             $notifNotCompleted = $this->getAll()
                 ->where('type', 'participant_notcompleted')
-                ->whereIn('event_id', $notCompletedEventIds)
+                ->whereIn('event_id', $notCompletedCode)
                 ->orderByDesc('created_at')
                 ->get();
         }
 
-        return $notifCompleted->merge($notifNotCompleted);
+        $merged = $notifCompleted->merge($notifNotCompleted);
+
+        return $merged
+            ->sortByDesc('created_at')
+            ->unique('event_id')
+            ->values();
     }
 }

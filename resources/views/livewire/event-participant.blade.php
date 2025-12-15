@@ -45,6 +45,97 @@
         </div>
     </div>
 
+    <div class="card shadow-sm rounded-4 border-0 mb-4">
+        <div class="card-header border-0 rounded-top-4"
+            style="background: linear-gradient(135deg, #e3f6ee, #cfeee1, #bfe6d4);">
+            <h5 class="fw-bold mb-0 text-dark text-uppercase fw-bolder" style="letter-spacing: 2px">
+                > Event Details
+            </h5>
+        </div>
+
+        <div class="card-body px-4 py-4">
+            <div class="row g-3 flex-nowrap overflow-auto justify-content-between">
+
+                <div class="col-auto">
+                    <div class="d-flex align-items-center gap-3 p-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                            style="width:48px;height:48px;">
+                            <i class="fa-solid fa-location-dot fa-lg"></i>
+                        </div>
+                        <div>
+                            <small class="text-black fw-bolder text-uppercase">Location</small>
+                            <div class="fw-semibold text-dark">
+                                {{ $event->locations->name ?? '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <div class="d-flex align-items-center gap-3 p-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                            style="width:48px;height:48px;">
+                            <i class="fa-solid fa-building fa-lg"></i>
+                        </div>
+                        <div>
+                            <small class="text-black fw-bolder text-uppercase">Organizer</small>
+                            <div class="fw-semibold text-dark">
+                                {{ $event->organizers->name ?? '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <div class="d-flex align-items-center gap-3 p-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                            style="width:48px;height:48px;">
+                            <i class="fa-solid fa-chalkboard-user fa-lg"></i>
+                        </div>
+                        <div>
+                            <small class="text-black fw-bolder text-uppercase">Trainer</small>
+                            <div class="fw-semibold text-dark">
+                                {{ $event->trainers->name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <div class="d-flex align-items-center gap-3 p-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                            style="width:48px;height:48px;">
+                            <i class="fa-solid fa-calendar-days fa-lg"></i>
+                        </div>
+                        <div>
+                            <small class="text-black fw-bolder text-uppercase">Date</small>
+                            <div class="fw-semibold text-dark">
+                                {{ $event->startDateFormat() }} – {{ $event->endDateFormat() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <div class="d-flex align-items-center gap-3 p-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                            style="width:48px;height:48px;">
+                            <i class="fa-regular fa-clock fa-lg"></i>
+                        </div>
+                        <div>
+                            <small class="text-black fw-bolder text-uppercase">Time</small>
+                            <div class="fw-semibold text-dark">
+                                {{ $event->start_time }} – {{ $event->end_time }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
     <x-card :icon="'fa-table'">
         @slot('title')
         {{ $event->code }} - {{ $event->trainings->name }}
@@ -78,10 +169,11 @@
 
         <hr class="mt-3 mb-5">
         @endif
-
+        @if (in_array($this->role, ['spv', 'manager']) || $user->dept == 'HRD')
         <button type="button" class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#historyApprovalModal">
             <i class="fa-solid fa-clock-rotate-left me-2"></i>History Approval
         </button>
+        @endif
         @if ($this->role === 'spv' && !$registerNotif && $event->status == 'upcoming')
         <button type="button" class="btn btn-success" wire:click="registerNotification">
             <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
@@ -93,6 +185,9 @@
         </button>
         @endif
         @if ($user->dept === 'HRD')
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addParticipantModal">
+            <i class="fa-solid fa-plus me-2"></i>Add Participant
+        </button>
         @if (!$hrdApprovalNotif && $event->status == 'upcoming')
         <button type="button" class="btn btn-success" wire:click="hrdApprovalNotification">
             <i class="fa-solid fa-paper-plane me-2"></i>Send Notification
@@ -197,6 +292,75 @@
             </table>
         </div>
         @endslot
+
+        <div wire:ignore.self class="modal fade" id="addParticipantModal" tabindex="-1"
+            aria-labelledby="addParticipantModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+
+                    <div class="modal-header bg-war text-white">
+                        <h5 class="modal-title fw-bold" id="addParticipantModalLabel">Add Participant</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="mb-3 position-relative">
+                            <label class="form-label fw-bold">NPK</label>
+
+                            <input type="text" class="form-control" wire:model.live="npk" autocomplete="off"
+                                placeholder="Search NPK or name employee">
+
+                            @error('npk')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+
+                            @if (!empty($searchResults))
+                            <ul class="list-group position-absolute w-100 mt-1 shadow-sm"
+                                style="z-index: 1100; max-height: 200px; overflow-y: auto;">
+                                @foreach ($searchResults as $result)
+                                <li class="list-group-item list-group-item-action" style="cursor: pointer;"
+                                    wire:click="addParticipantByHrd('{{ $result->npk }}')">
+                                    <strong>{{ $result->npk }}</strong> — {{ $result->full_name }}
+                                </li>
+                                @endforeach
+                            </ul>
+                            @endif
+                        </div>
+
+                        @if (!empty($selectedParticipants))
+                        <div class="mt-3">
+                            <label class="fw-bold mb-2">Selected Participants</label>
+
+                            <ul class="list-group">
+                                @foreach ($selectedParticipants as $participant)
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ $participant['npk'] }} - {{ $participant['full_name'] }}
+
+                                    <button class="badge bg-gradient-danger border-0"
+                                        wire:click="removeSelected('{{ $participant['npk'] }}')">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                        <button type="button" class="btn btn-sm btn-success" wire:click="registerParticipantbyHrd">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Submit
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
 
         <div class="modal fade" id="historyApprovalModal" tabindex="-1" aria-labelledby="historyApprovalLabel"
             aria-hidden="true">

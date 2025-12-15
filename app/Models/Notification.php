@@ -19,7 +19,7 @@ class Notification extends Model
 
     public function events(): BelongsTo
     {
-        return $this->belongsTo(Event::class, 'event_id', 'id');
+        return $this->belongsTo(Event::class, 'event_id', 'code');
     }
     public function transactions(): HasMany
     {

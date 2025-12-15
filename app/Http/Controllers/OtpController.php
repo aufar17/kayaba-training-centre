@@ -49,7 +49,11 @@ class OtpController extends Controller
 
         $otp->delete();
 
-        return redirect()->route('index')->with('success', 'Selamat Datang!');
+        if ($user->dept == 'HRD') {
+            return redirect()->route('index')->with('success', 'Selamat Datang!');
+        } else {
+            return redirect()->route('event')->with('success', 'Selamat Datang!');
+        }
     }
 
     public function resendOtp()

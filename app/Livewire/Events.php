@@ -98,7 +98,7 @@ class Events extends Component
         $this->showTrainingInput = $this->training === 'other';
         $this->trainingNamePreview = $this->training === 'other'
             ? ($this->new_training_name ?: '-')
-            : (optional(collect($this->trainings)->firstWhere('id', $this->training))->name ?? '-');
+            : (optional(collect($this->trainings)->firstWhere('code', $this->training))->name ?? '-');
     }
 
     public function checkLocation()
@@ -106,7 +106,7 @@ class Events extends Component
         $this->showLocationInput = $this->location === 'other';
         $this->locationNamePreview = $this->location === 'other'
             ? ($this->new_location_name ?: '-')
-            : (optional(collect($this->locations)->firstWhere('id', $this->location))->name ?? '-');
+            : (optional(collect($this->locations)->firstWhere('code', $this->location))->name ?? '-');
     }
 
     public function checkOrganizer()
@@ -114,7 +114,7 @@ class Events extends Component
         $this->showOrganizerInput = $this->organizer === 'other';
         $this->organizerNamePreview = $this->organizer === 'other'
             ? ($this->new_organizer_name ?: '-')
-            : (optional(collect($this->organizers)->firstWhere('id', $this->organizer))->name ?? '-');
+            : (optional(collect($this->organizers)->firstWhere('code', $this->organizer))->name ?? '-');
     }
 
     public function checkTrainer()
@@ -122,7 +122,7 @@ class Events extends Component
         $this->showTrainerInput = $this->trainer === 'other';
         $this->trainerNamePreview = $this->trainer === 'other'
             ? ($this->new_trainer_name ?: '-')
-            : (optional(collect($this->trainers)->firstWhere('id', $this->trainer))->name ?? '-');
+            : (optional(collect($this->trainers)->firstWhere('code', $this->trainer))->name ?? '-');
     }
 
     public function updatedNewTrainingName($value)

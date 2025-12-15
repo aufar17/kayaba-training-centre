@@ -15,12 +15,12 @@ class EventRepository implements EventRepositoryInterface
         return Event::query()->with(['trainings.matrix', 'organizers', 'trainers', 'locations']);
     }
 
-    public function find(int $id)
+    public function find($id)
     {
         return Event::with(['trainings', 'locations', 'organizers', 'trainers'])->findOrFail($id);
     }
 
-    public function participantModel(): Builder
+    public function participantModel()
     {
         return EventTransaction::query();
     }
@@ -29,7 +29,8 @@ class EventRepository implements EventRepositoryInterface
     {
         return $this->getModel()
             ->whereHas('trainings.matrix', function ($q) use ($dept) {
-                $q->where('dept', $dept);
+                $q->where('dept', $dept)
+                    ->orWhere('dept', 'ALL');
             });
     }
 }

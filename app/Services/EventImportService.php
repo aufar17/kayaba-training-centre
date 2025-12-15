@@ -17,22 +17,14 @@ class EventImportService implements EventImportServiceInterface
     {
         DB::transaction(function () use ($rows) {
 
-            $unique = collect($rows)
-                ->unique(
-                    fn($row) =>
-                    strtolower(trim($row['training id'] ?? '')) . '|' .
-                        strtolower(trim($row['organizer'] ?? ''))
-                )
-                ->values()
-                ->all();
+            $this->importOrganizers($rows);
 
-            $this->importOrganizers($unique);
-
-            $events = $this->importEvents($unique);
+            $events = $this->importEvents($rows);
 
             $this->importParticipants($rows, $events);
         });
     }
+
 
     private function generateOrganizerCode(): string
     {
@@ -55,7 +47,6 @@ class EventImportService implements EventImportServiceInterface
             $this->eventCounter = $start;
         }
 
-        // increment untuk berikutnya
         $code = 'EVT' . str_pad($this->eventCounter, 4, '0', STR_PAD_LEFT);
         $this->eventCounter++;
 
@@ -213,6 +204,8 @@ class EventImportService implements EventImportServiceInterface
 
     private function importParticipants(array $rows, array $events): void
     {
+        $participants = [];
+
         foreach ($rows as $row) {
 
             if (empty($row['npk']) || empty($row['training id'])) {
@@ -221,23 +214,36 @@ class EventImportService implements EventImportServiceInterface
 
             $startDate = $this->parseExcelDate($row['start date'] ?? null);
 
-            $key = strtolower(
-                trim($row['training id'] ?? '') . '|' .
+            $eventKey = strtolower(
+                trim($row['training id']) . '|' .
                     trim($row['organizer'] ?? '') . '|' .
                     ($startDate ?? 'nodate')
             );
 
-            $event = $events[$key] ?? null;
-            if (!$event) continue;
+            if (!isset($events[$eventKey])) {
+                continue;
+            }
 
+            $event = $events[$eventKey];
+
+            $uniqueKey = $event->code . '|' . trim($row['npk']);
+
+            $participants[$uniqueKey] = [
+                'event_id' => $event->code,
+                'npk'      => trim($row['npk']),
+            ];
+        }
+
+        // Insert unik
+        foreach ($participants as $data) {
             EventTransaction::firstOrCreate(
                 [
-                    'event_id' => $event->code,
-                    'npk'      => $row['npk'],
+                    'event_id' => $data['event_id'],
+                    'npk'      => $data['npk'],
                 ],
                 [
-                    'approval'   => 2,
-                    'completed'  => 1,
+                    'approval'  => 2,
+                    'completed' => 1,
                 ]
             );
         }

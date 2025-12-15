@@ -26,6 +26,7 @@ interface EventServiceInterface
     public function countApprovalByEvent($participants);
     public function deleteParticipant($id);
     public function registerParticipant($data);
+    public function registerParticipantbyHrd($eventId, array $participants);
     public function approvalParticipant($data);
     public function completedParticipant($data);
     public function historyParticipant($npk);

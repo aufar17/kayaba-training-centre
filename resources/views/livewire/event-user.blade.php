@@ -87,9 +87,9 @@
                                 </li>
                             </ul>
                             <div class="d-flex justify-content-end">
-                                <a href="{{ route('training-content', $now->id) }}"
-                                    class="btn btn-info btn-sm me-2 shadow-lg">
-                                    <i class="fa-solid fa-file me-1"></i> View
+                                <a href="{{ route('training-content', $now->trainings->id) }}"
+                                    class="btn btn-warning btn-sm me-2 shadow-lg">
+                                    <i class="fa-solid fa-file me-1"></i> Syllabus
                                 </a>
                                 <a href="{{ route('event-participant', $now->id) }}"
                                     class="btn btn-success btn-sm shadow-lg">
@@ -140,13 +140,15 @@
                                 </li>
                             </ul>
                             <div class="d-flex justify-content-end">
-                                <a href="{{ route('training-content', $upcoming->id) }}"
-                                    class="btn btn-info btn-sm me-2 shadow-lg">
-                                    <i class="fa-solid fa-file me-1"></i> View
+                                <a href="{{ route('training-content', $upcoming->trainings->id) }}"
+                                    class="btn btn-warning btn-sm me-2 shadow-lg">
+                                    <i class="fa-solid fa-file me-1"></i> Syllabus
                                 </a>
                                 <a href="{{ route('event-participant', $upcoming->id) }}"
                                     class="btn btn-info btn-sm shadow-lg">
-                                    <i class="fa-solid fa-cash-register me-1"></i> Register
+                                    <i class="fa-solid {{ $role === 'spv' ? 'fa-cash-register' : 'fa-eye' }} me-1"></i>
+                                    {{ $role === 'spv' ? 'Register'
+                                    : 'View' }}
                                 </a>
                             </div>
                         </div>
@@ -164,6 +166,10 @@
         </div>
 
         <div class="tab-pane fade" id="past" role="tabpanel" aria-labelledby="past-tab">
+
+            <div class="my-5">
+                {{ $pastEvent->links() }}
+            </div>
             <div class="row g-4">
                 @forelse ($pastEvent as $past)
                 <div class="col-md-6 col-lg-4">
@@ -192,9 +198,9 @@
                                 </li>
                             </ul>
                             <div class="d-flex justify-content-end">
-                                <a href="{{ route('training-content', $past->id) }}"
-                                    class="btn btn-info btn-sm me-2 shadow-lg">
-                                    <i class="fa-solid fa-file me-1"></i> View
+                                <a href="{{ route('training-content', $past->trainings->id) }}"
+                                    class="btn btn-warning btn-sm me-2 shadow-lg">
+                                    <i class="fa-solid fa-file me-1"></i> Syllabus
                                 </a>
                                 <a href="{{ route('event-participant', $past->id) }}"
                                     class="btn btn-secondary btn-sm shadow-lg">
@@ -212,6 +218,10 @@
                     </p>
                 </div>
                 @endforelse
+
+                <div class="mt-3">
+                    {{ $pastEvent->links() }}
+                </div>
             </div>
         </div>
 

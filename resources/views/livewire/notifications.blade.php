@@ -33,7 +33,7 @@
                             {!! $notification['description'] !!}
                         </p>
 
-                        <a href="{{ route('event-participant', $notification['event_id']) }}"
+                        <a href="{{ route('event-participant', $notification->events->id) }}"
                             class="badge bg-info border-0 shadow-sm ms-3 d-flex align-items-center"
                             style="font-size: 0.8rem;">
                             <i class="fa-solid fa-arrow-right me-1"></i> View
