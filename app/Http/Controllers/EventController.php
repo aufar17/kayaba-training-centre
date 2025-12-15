@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PresenceExport;
 use App\Imports\EventImport;
+use App\Interfaces\RepositoryInterface\EventRepositoryInterface;
 use App\Interfaces\ServiceInterface\EventImportServiceInterface;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
-class EventImportController extends Controller
+class EventController extends Controller
 {
     protected EventImportServiceInterface $eventImportService;
 
@@ -28,5 +31,13 @@ class EventImportController extends Controller
         $this->eventImportService->import($rows);
 
         return back()->with('success', 'Import Data Successfully!');
+    }
+
+    public function presenceExport($id, EventRepositoryInterface $eventRepo)
+    {
+        return Excel::download(
+            new PresenceExport($eventRepo, $id),
+            'Absensi.xlsx'
+        );
     }
 }

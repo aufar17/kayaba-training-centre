@@ -17,7 +17,7 @@ class EventRepository implements EventRepositoryInterface
 
     public function find($id)
     {
-        return Event::with(['trainings', 'locations', 'organizers', 'trainers'])->findOrFail($id);
+        return Event::with(['transactions.user', 'trainings', 'locations', 'organizers', 'trainers'])->findOrFail($id);
     }
 
     public function participantModel()
