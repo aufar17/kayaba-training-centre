@@ -515,6 +515,8 @@ class EventService implements EventServiceInterface
             ->participantModel()
             ->with(['event.trainings', 'user'])
             ->where('npk', $npk)
+            ->where('approval', '=', 2)
+            ->where('completed', '=', 1)
             ->get();
     }
 
@@ -683,8 +685,6 @@ class EventService implements EventServiceInterface
             throw $e;
         }
     }
-
-
 
     public function reportNotification($id)
     {

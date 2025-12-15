@@ -44,6 +44,7 @@ class HistoryTraining extends Component
                         ->orWhere('name', 'like', "%{$search}%");
                 });
             })
+            ->orderByDesc('start_date')
             ->get();
     }
 }

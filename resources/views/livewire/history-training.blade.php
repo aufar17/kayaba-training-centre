@@ -33,7 +33,7 @@
                     <span class="input-group-text ps-3">
                         <i class="fa-solid fa-user text-secondary fs-6 me-2"></i>
                     </span>
-                    <input type="text" class="form-control bg-transparent" placeholder="Search by NPK or Name..."
+                    <input type="text" class="form-control bg-transparent" placeholder="Search by NPK or Name"
                         wire:model.live="searchEmployee">
                 </div>
             </div>
@@ -48,8 +48,8 @@
                     <span class="input-group-text ps-3">
                         <i class="fa-solid fa-chalkboard-user text-secondary fs-6 me-2"></i>
                     </span>
-                    <input type="text" class="form-control bg-transparent"
-                        placeholder="Search by Training Name or Event..." wire:model.live="searchTraining">
+                    <input type="text" class="form-control bg-transparent" placeholder="Search by Training Name"
+                        wire:model.live="searchTraining">
                 </div>
             </div>
         </div>
@@ -108,6 +108,13 @@
                                 <i class="fa-solid fa-chalkboard-user text-success fs-4 me-3"></i>
                                 <div class="d-flex flex-column">
                                     <h6 class="mb-0">{{ $event->trainings->code }} - {{ $event->trainings->name }}</h6>
+                                    <span class="text-black fw-bolder small">
+                                        <i class="fa-regular fa-calendar me-1"></i>
+                                        {{ $event->code }} - <span style="color: #0046FF">{{
+                                            $event->transactions->count() .
+                                            ' Participant'
+                                            }}</span>
+                                    </span>
                                     <span class="text-muted small">
                                         <i class="fa-regular fa-calendar-days me-1"></i>
                                         {{ $event->startDateFormat() }} - {{ $event->endDateFormat() }}

@@ -608,10 +608,17 @@
                             @csrf
 
                             <div class="modal-body">
-                                <label class="form-label fw-semibold">Upload File Excel</label>
+                                <label class="form-label fw-semibold">Upload History</label>
+
                                 <input type="file" name="file" class="form-control" accept=".xlsx, .xls" required>
+
+                                <div class="form-text text-info mt-1">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    Supported file types: <strong>.xlsx</strong>, <strong>.xls</strong>
+                                </div>
+
                                 @error('file')
-                                <span class="text-danger small">{{ $message }}</span>
+                                <span class="text-danger small d-block mt-1">{{ $message }}</span>
                                 @enderror
                             </div>
 

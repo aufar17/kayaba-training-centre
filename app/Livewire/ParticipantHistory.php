@@ -28,4 +28,14 @@ class ParticipantHistory extends Component
         $history = $service->historyParticipant($this->npk);
         return $history;
     }
+
+    public function completedLabel($completed)
+    {
+        return match ($completed) {
+            -1 => ['text' => 'Not Completed', 'class' => 'bg-gradient-danger'],
+            0   => ['text' => 'Not Complete', 'class' => 'bg-gradient-danger'],
+            1 => ['text' => 'Completed', 'class' => 'bg-gradient-success'],
+            default => ['text' => 'Waiting Report', 'class' => 'bg-gradient-secondary'],
+        };
+    }
 }

@@ -185,7 +185,7 @@
         </button>
         @endif
         @if ($user->dept === 'HRD')
-        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addParticipantModal">
+        <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#addParticipantModal">
             <i class="fa-solid fa-plus me-2"></i>Add Participant
         </button>
         @if (!$hrdApprovalNotif && $event->status == 'upcoming')

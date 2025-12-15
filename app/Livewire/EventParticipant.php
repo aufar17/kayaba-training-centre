@@ -110,21 +110,28 @@ class EventParticipant extends Component
             return;
         }
 
-        $code = Event::where('id', $this->id)->pluck('code');
+        $eventCode = Event::where('id', $this->id)->value('code');
 
-        $registeredNpks = EventTransaction::where('event_id', $code)
+        $registeredNpks = EventTransaction::where('event_id', $eventCode)
             ->pluck('npk')
             ->toArray();
 
-        $tempSelected = collect($this->selectedParticipants)->pluck('npk')->toArray();
+        $tempSelected = collect($this->selectedParticipants)
+            ->pluck('npk')
+            ->toArray();
 
-        $excludeNpks = array_merge($registeredNpks, $tempSelected);
+        $excludeNpks = array_unique(array_merge($registeredNpks, $tempSelected));
 
-        $this->searchResults = CTUser::where('npk', 'like', '%' . $this->npk . '%')
+        $this->searchResults = CTUser::query()
+            ->where(function ($q) {
+                $q->where('npk', 'like', '%' . $this->npk . '%')
+                    ->orWhere('full_name', 'like', '%' . $this->npk . '%');
+            })
             ->whereNotIn('npk', $excludeNpks)
             ->limit(10)
             ->get(['npk', 'full_name']);
     }
+
 
 
     public function updatedNpk()
