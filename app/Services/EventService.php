@@ -153,6 +153,26 @@ class EventService implements EventServiceInterface
                 ]);
             }
 
+            $targets = MatrixTraining::where('training_code', $event->trainings->code)->get();
+
+            $notification = Notification::create([
+                'event_id' => $event->code,
+                'type' => 'event',
+                'title' => 'New Training Event Has Been Created',
+                'description' => 'A new training event titled  <b>"' . $event->trainings->name . '"</b> has been created and is awaiting participant registration.'
+            ]);
+
+            foreach ($targets as $target) {
+
+                $notif_trx = NotificationTransaction::create(
+                    [
+                        'notification_id' => $notification->id,
+                        'target' => $target->dept,
+                        'is_read' => 0,
+                    ]
+                );
+            }
+
             DB::commit();
             return $event;
         } catch (\Throwable $e) {

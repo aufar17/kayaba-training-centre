@@ -18,12 +18,16 @@ class PresenceExport implements WithStyles, WithHeadings, WithCustomStartCell
 {
     protected $event;
     protected $participants;
+    protected $trainers;
+    protected $organizers;
 
     public function __construct(EventRepositoryInterface $eventRepo, int $id)
     {
         $this->event = $eventRepo->find($id);
 
         $this->participants = $this->event->transactions;
+        $this->trainers = $this->event->trainers;
+        $this->organizers = $this->event->organizers;
     }
 
     public function startCell(): string
@@ -223,6 +227,40 @@ class PresenceExport implements WithStyles, WithHeadings, WithCustomStartCell
                 'name' => 'Tahoma'
             ],
         ]);
+
+        $headerNewTable = ['NO', 'NPK', 'NAMA', 'INSTANSI/DEPARTMENT', 'TANDA TANGAN'];
+        $sheet->mergeCells('F39:G39');
+        $startRow = 39;
+        $startCol = 'B';
+
+        foreach ($headerNewTable as $index => $title) {
+            $col = chr(ord($startCol) + $index);
+            $sheet->setCellValue("{$col}{$startRow}", $title);
+
+            $sheet->getStyle("{$col}{$startRow}")->applyFromArray([
+                'font' => ['bold' => true, 'size' => 12, 'name' => 'Tahoma'],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FFFF00'],
+                ],
+            ]);
+        }
+
+        $currentRow = $startRow + 1;
+        $this->renderTrainer(
+            $sheet,
+            $this->trainers,
+            $this->organizers,
+            $currentRow,
+            1
+        );
     }
 
     private function renderParticipants(Worksheet $sheet, $participants, int $startRow, int $startNumber)
@@ -299,5 +337,70 @@ class PresenceExport implements WithStyles, WithHeadings, WithCustomStartCell
         }
 
         return $startRow + $totalPeserta;
+    }
+
+    private function renderTrainer(Worksheet $sheet, $trainers, $organizers, int $startRow, int $startNumber)
+    {
+        $totalTrainer = 4;
+        $rowHeight    = 21;
+
+        $absen = 1;
+
+        for ($i = 0; $i < $totalTrainer; $i++) {
+            $row = $startRow + $i;
+            $sheet->getRowDimension($row)->setRowHeight($rowHeight);
+
+            $sheet->setCellValue("B{$row}", $startNumber + $i);
+
+            if (isset($trainers[$i])) {
+                $t = $trainers[$i];
+                $sheet->setCellValue("C{$row}", $t->npk ?? '');
+                $sheet->setCellValue("D{$row}", mb_strtoupper($t->name ?? ''));
+                $sheet->setCellValue("E{$row}", mb_strtoupper($t->user->dept ?? ($organizers->name ?? '-')));
+            } else {
+                $sheet->setCellValue("C{$row}", '');
+                $sheet->setCellValue("D{$row}", '');
+                $sheet->setCellValue("E{$row}", '');
+            }
+
+            $sheet->getStyle("B{$row}:E{$row}")->applyFromArray([
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical'   => Alignment::VERTICAL_CENTER,
+                ],
+                'font' => [
+                    'name' => 'Tahoma',
+                    'size' => 10
+                ],
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                ],
+            ]);
+        }
+
+        for ($i = 0; $i < $totalTrainer; $i += 2) {
+            $rowStart = $startRow + $i;
+            $rowEnd   = $rowStart + 1;
+
+            $sheet->mergeCells("F{$rowStart}:F{$rowEnd}");
+            $sheet->setCellValue("F{$rowStart}", $absen);
+
+            if ($absen + 1 <= $totalTrainer) {
+                $sheet->mergeCells("G{$rowStart}:G{$rowEnd}");
+                $sheet->setCellValue("G{$rowStart}", $absen + 1);
+            }
+
+            $sheet->getStyle("F{$rowStart}:G{$rowEnd}")->applyFromArray([
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_JUSTIFY,
+                    'vertical'   => Alignment::VERTICAL_TOP,
+                ],
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                ],
+            ]);
+
+            $absen += 2;
+        }
     }
 }
