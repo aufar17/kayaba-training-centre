@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('training_id')->index();
             $table->string('location_id')->index();
             $table->string('organizer_id')->index()->nullable();
-            $table->string('trainer_id')->index();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->time('start_time')->nullable();

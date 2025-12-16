@@ -15,6 +15,7 @@ class EventTransaction extends Model
         'npk',
         'approval',
         'completed',
+        'notes',
     ];
 
     public function event(): BelongsTo

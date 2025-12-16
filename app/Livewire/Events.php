@@ -17,7 +17,8 @@ class Events extends Component
     use WithFileUploads;
 
     public $file;
-    public $code, $training, $location, $organizer, $trainer;
+    public $code, $training, $location, $organizer;
+    public $trainer = [];
     public $start_date, $end_date, $start_time, $end_time;
     public $eventId;
     public $isEditing = false;
@@ -38,6 +39,9 @@ class Events extends Component
     public $trainings = [];
     public $organizers = [];
     public $trainers = [];
+    public $trainerSearch;
+    public $trainerResults = [];
+    public $trainerNames = [];
     public $locations = [];
 
     protected EventServiceInterface $eventService;
@@ -119,11 +123,22 @@ class Events extends Component
 
     public function checkTrainer()
     {
-        $this->showTrainerInput = $this->trainer === 'other';
-        $this->trainerNamePreview = $this->trainer === 'other'
-            ? ($this->new_trainer_name ?: '-')
-            : (optional(collect($this->trainers)->firstWhere('code', $this->trainer))->name ?? '-');
+        $trainerArray = is_array($this->trainer) ? $this->trainer : [$this->trainer];
+
+        $this->showTrainerInput = in_array('other', $trainerArray);
+
+        $names = collect($trainerArray)
+            ->reject(fn($t) => $t === 'other')
+            ->map(fn($code) => optional(collect($this->trainers)->firstWhere('code', $code))->name ?? '-')
+            ->toArray();
+
+        if ($this->showTrainerInput && $this->new_trainer_name) {
+            $names[] = $this->new_trainer_name;
+        }
+
+        $this->trainerNames = $names;
     }
+
 
     public function updatedNewTrainingName($value)
     {
@@ -148,21 +163,71 @@ class Events extends Component
 
     public function updatedNewTrainerName($value)
     {
-        if ($this->trainer === 'other') {
-            $this->trainerNamePreview = $value ?: '-';
+        if (in_array('other', $this->trainer ?? [])) {
+            $this->checkTrainer();
         }
     }
+
+    public function updatedTrainerSearch($value)
+    {
+        if (strlen($value) < 2) {
+            $this->trainerResults = [];
+            return;
+        }
+
+        $this->trainerResults = collect($this->trainers)
+            ->filter(fn($t) => str_contains(strtolower($t->name), strtolower($value)))
+            ->values()
+            ->toArray();
+    }
+
+    public function selectTrainer($name)
+    {
+        if (!in_array($name, $this->trainerNames)) {
+            $this->trainerNames[] = $name;
+        }
+
+        $this->trainerSearch = '';
+        $this->trainerResults = [];
+    }
+
+
+    public function showNewTrainer()
+    {
+        $this->showTrainerInput = true;
+    }
+
+    public function addNewTrainer()
+    {
+        $name = trim($this->new_trainer_name);
+        if ($name && !in_array($name, $this->trainerNames)) {
+            $this->trainerNames[] = $name;
+        }
+
+        $this->new_trainer_name = '';
+        $this->showTrainerInput = false;
+    }
+
+    public function removeTrainer($index)
+    {
+        unset($this->trainerNames[$index]);
+        $this->trainerNames = array_values($this->trainerNames);
+    }
+
+
 
     public function create()
     {
         $this->eventService = app(EventServiceInterface::class);
+
+        $trainers = $this->trainerNames ?? [];
 
         $data = [
             'code' => $this->code,
             'training' => $this->training,
             'location' => $this->location,
             'organizer' => $this->organizer,
-            'trainer' => $this->trainer,
+            'trainer' => $trainers,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'start_time' => $this->start_time,
@@ -175,10 +240,6 @@ class Events extends Component
                 'code' => $this->new_organizer_code,
                 'name' => $this->new_organizer_name,
             ],
-            'new_trainer' => [
-                'code' => $this->new_trainer_code,
-                'name' => $this->new_trainer_name,
-            ],
             'new_location' => [
                 'code' => $this->new_location_code,
                 'name' => $this->new_location_name,
@@ -189,13 +250,13 @@ class Events extends Component
 
         if ($create) {
             session()->flash('success', 'New event added successfully.');
-            $this->resetForm();
         } else {
             session()->flash('error', 'Failed to add new event.');
         }
 
         return redirect()->route('event');
     }
+
 
     public function edit($id)
     {

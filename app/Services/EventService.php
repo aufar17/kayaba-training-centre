@@ -11,14 +11,17 @@ use App\Interfaces\ServiceInterface\TrainerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
 use App\Models\Auth\CTUser;
 use App\Models\Event;
+use App\Models\EventTrainer;
 use App\Models\EventTransaction;
 use App\Models\MatrixTraining;
 use App\Models\Notification;
 use App\Models\NotificationTransaction;
+use App\Models\Trainer;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EventService implements EventServiceInterface
 {
@@ -76,79 +79,79 @@ class EventService implements EventServiceInterface
         DB::beginTransaction();
 
         try {
-
-            if (($data['training'] ?? null) === 'other' && !empty($data['new_training']['name'])) {
-                $trainingData = [
-                    'code' => $data['new_training']['code'] ?? 'TR-' . strtoupper(str()->random(4)),
-                    'name' => $data['new_training']['name'],
-                    'desc' => $data['new_training']['desc'] ?? null,
-                    'purpose' => $data['new_training']['purpose'] ?? null,
-                    'day_duration' => $data['new_training']['day_duration'] ?? null,
-                    'time_duration' => $data['new_training']['time_duration'] ?? null,
-                ];
-
-                $training = $this->trainingService->create($trainingData);
-                $data['training_id'] = $training->id;
-            } else {
-                $data['training_id'] = $data['training'];
+            if (($data['training'] ?? null) === 'other' && empty($data['new_training']['name'])) {
+                session()->flash('error', 'Please provide a name for the new training.');
+                return null;
+            } elseif (($data['training'] ?? null) !== 'other' && empty($data['training'])) {
+                session()->flash('error', 'Please select a training.');
+                return null;
             }
 
-            if (($data['organizer'] ?? null) === 'other' && !empty($data['new_organizer']['name'])) {
-                $organizer = $this->organizerService->create($data['new_organizer']);
-                $data['organizer_id'] = $organizer->id;
-            } else {
-                $data['organizer_id'] = $data['organizer'];
+            if (($data['organizer'] ?? null) === 'other' && empty($data['new_organizer']['name'])) {
+                session()->flash('error', 'Please provide a name for the new organizer.');
+                return null;
+            } elseif (($data['organizer'] ?? null) !== 'other' && empty($data['organizer'])) {
+                session()->flash('error', 'Please select an organizer.');
+                return null;
             }
 
-            if (($data['trainer'] ?? null) === 'other' && !empty($data['new_trainer']['name'])) {
-                $trainer = $this->trainerService->create($data['new_trainer']);
-                $data['trainer_id'] = $trainer->id;
-            } else {
-                $data['trainer_id'] = $data['trainer'];
+            if (($data['location'] ?? null) === 'other' && empty($data['new_location']['name'])) {
+                session()->flash('error', 'Please provide a name for the new location.');
+                return null;
+            } elseif (($data['location'] ?? null) !== 'other' && empty($data['location'])) {
+                session()->flash('error', 'Please select a location.');
+                return null;
             }
 
-            if (($data['location'] ?? null) === 'other' && !empty($data['new_location']['name'])) {
-                $location = $this->locationService->create($data['new_location']);
-                $data['location_id'] = $location->id;
-            } else {
-                $data['location_id'] = $data['location'];
+            if (empty($data['trainer'] ?? [])) {
+                session()->flash('error', 'Please select or add at least one trainer.');
+                return null;
+            }
+
+            $trainerIds = [];
+            $lastTrainer = Trainer::orderBy('id', 'desc')->first();
+            $lastCode = $lastTrainer?->code ?? 'TA0000';
+            foreach ($data['trainer'] ?? [] as $t) {
+                if (is_string($t)) {
+                    $existing = Trainer::where('name', $t)->first();
+                    if ($existing) {
+                        $trainerIds[] = $existing->code;
+                    } else {
+                        preg_match('/TA(\d+)/', $lastCode, $matches);
+                        $nextNumber = isset($matches[1]) ? ((int)$matches[1] + 1) : 1;
+                        $nextCode = 'TA' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+                        $newTrainer = Trainer::create([
+                            'name' => $t,
+                            'code' => $nextCode,
+                        ]);
+                        $trainerIds[] = $newTrainer->code;
+
+                        $lastCode = $nextCode;
+                    }
+                } elseif (is_numeric($t)) {
+                    $trainerIds[] = $t;
+                }
             }
 
 
-            $create = Event::create([
+            $event = Event::create([
                 'code' => $data['code'],
                 'training_id' => $data['training_id'],
                 'location_id' => $data['location_id'],
                 'organizer_id' => $data['organizer_id'],
-                'trainer_id' => $data['trainer_id'],
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'],
             ]);
 
-
-            $event = Event::where('id', $create->id)->with(['trainings', 'locations', 'organizers', 'trainers'])->first();
-            $targets = MatrixTraining::where('training_code', $event->trainings->code)->get();
-
-            $notification = Notification::create([
-                'event_id' => $event->code,
-                'type' => 'event',
-                'title' => 'New Training Event Has Been Created',
-                'description' => 'A new training event titled  <b>"' . $event->trainings->name . '"</b> has been created and is awaiting participant registration.'
-            ]);
-
-            foreach ($targets as $target) {
-
-                $notif_trx = NotificationTransaction::create(
-                    [
-                        'notification_id' => $notification->id,
-                        'target' => $target->dept,
-                        'is_read' => 0,
-                    ]
-                );
+            foreach ($trainerIds as $trainerId) {
+                EventTrainer::create([
+                    'event_id' => $event->code,
+                    'trainer_id' => $trainerId,
+                ]);
             }
-
 
             DB::commit();
             return $event;
@@ -157,6 +160,7 @@ class EventService implements EventServiceInterface
             throw $e;
         }
     }
+
 
     public function update(int $id, array $data)
     {

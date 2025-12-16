@@ -111,7 +111,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-4">
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="location"
                                             class="form-label fw-semibold text-uppercase">Location</label>
@@ -135,7 +135,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                <div class="col-lg-4">
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="organizer"
                                             class="form-label fw-semibold text-uppercase">Organizer</label>
@@ -155,30 +155,6 @@
                                                 oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_organizer_name" class="form-control"
                                                 placeholder="Enter new organizer name">
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="col-lg-4">
-                                    <div class="mb-3">
-                                        <label for="trainer"
-                                            class="form-label fw-semibold text-uppercase">Trainer</label>
-                                        <select wire:model.live="trainer" id="trainer" class="form-select"
-                                            wire:change="checkTrainer">
-                                            <option value="">-- Select Trainer --</option>
-                                            @foreach($trainers as $trainer)
-                                            <option value="{{ $trainer->code }}">{{ $trainer->name }}</option>
-                                            @endforeach
-                                            <option value="other">Other...</option>
-                                        </select>
-
-                                        @if($showTrainerInput)
-                                        <div class="mt-2">
-                                            <input type="text" wire:model.live="new_trainer_code"
-                                                class="form-control mb-2" placeholder="Enter new trainer code"
-                                                oninput="this.value = this.value.toUpperCase()">
-                                            <input type="text" wire:model.live="new_trainer_name" class="form-control"
-                                                placeholder="Enter new trainer name">
                                         </div>
                                         @endif
                                     </div>
@@ -224,8 +200,44 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2 position-relative">
+                                        <div class="flex-grow-1 position-relative">
+                                            <input type="text" wire:model.live="trainerSearch"
+                                                class="form-control shadow-sm mb-2"
+                                                placeholder="Type to search trainer">
 
-                            <div class="card mt-4 border-0 shadow-lg">
+                                            @if($trainerResults)
+                                            <ul class="list-group position-absolute w-100" style="z-index:500;left:0;">
+                                                @foreach($trainerResults as $t)
+                                                <li class="list-group-item list-group-item-action"
+                                                    wire:click="selectTrainer('{{ $t['name'] }}')">
+                                                    {{ $t['name'] }}
+                                                </li>
+                                                @endforeach
+                                            </ul>
+                                            @endif
+                                        </div>
+
+                                        <button type="button" class="btn btn-md btn-warning"
+                                            wire:click="showNewTrainer">
+                                            New Trainer
+                                        </button>
+                                    </div>
+
+                                    @if($showTrainerInput)
+                                    <div class="d-flex gap-1 mt-2">
+                                        <input type="text" wire:model.live="new_trainer_name"
+                                            class="form-control shadow-sm" placeholder="Enter new trainer">
+                                        <button type="button" class="badge bg-success border-0 shadow-sm"
+                                            wire:click="addNewTrainer"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="card mt-5 border-0 shadow-lg">
                                 <div class="card-header bg-light border-bottom border border-success">
                                     <h6 class="mb-0 fw-bold text-black text-uppercase">
                                         <i class="fa-solid fa-list-check me-2"></i>Event Preview
@@ -237,7 +249,8 @@
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Event Code
+                                                <div class="fw-semibold text-secondary text-uppercase small">Event
+                                                    Code
                                                 </div>
                                                 <div class="fw-bold text-dark">{{ $code ?: '-' }}</div>
                                             </div>
@@ -245,7 +258,8 @@
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Location
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Location
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $locationNamePreview }} </div>
@@ -255,28 +269,43 @@
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Organizer
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Organizer
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $organizerNamePreview }}
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
                                                 <div class="fw-semibold text-secondary text-uppercase small">Trainer
                                                 </div>
                                                 <div class="fw-bold text-dark">
-                                                    {{ $trainerNamePreview }} </div>
+                                                    @if(!empty($trainerNamePreview))
+                                                    <ol class="ps-3 mb-0">
+                                                        @foreach($trainerNames as $index => $name)
+                                                        <li
+                                                            class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span>{{ $index + 1 }}. {{ $name }}</span>
+                                                            <button type="button" class="badge bg-danger border-0 ms-2"
+                                                                wire:click="removeTrainer({{ $index }})">x</button>
+                                                        </li>
+                                                        @endforeach
+                                                    </ol>
+                                                    @else
+                                                    -
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="col-md-12">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Training
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Training
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $trainingNamePreview }}

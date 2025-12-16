@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
@@ -16,7 +17,6 @@ class Event extends Model
         'training_id',
         'location_id',
         'organizer_id',
-        'trainer_id',
         'start_date',
         'end_date',
         'start_time',
@@ -37,14 +37,23 @@ class Event extends Model
     {
         return $this->belongsTo(Location::class, 'location_id', 'code');
     }
+
     public function organizers(): BelongsTo
     {
         return $this->belongsTo(Organizer::class, 'organizer_id', 'code');
     }
-    public function trainers(): BelongsTo
+    public function trainers(): BelongsToMany
     {
-        return $this->belongsTo(Trainer::class, 'trainer_id', 'code');
+        return $this->belongsToMany(
+            Trainer::class,
+            'event_trainers',
+            'event_id',
+            'trainer_id',
+            'code',
+            'code'
+        );
     }
+
 
     public function startDateFormat(): string
     {

@@ -11,14 +11,14 @@
             overflow: hidden;
         }
 
-        .hero-overlay {
+        /* .hero-overlay {
             position: absolute;
             inset: 0;
             background: linear-gradient(135deg,
                     rgba(255, 255, 255, 0.52) 0%,
                     rgba(236, 121, 121, 0.38) 45%,
                     rgba(200, 0, 0, 0.23) 100%);
-        }
+        } */
 
         .kpi-card {
             padding: 26px;

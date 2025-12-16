@@ -95,8 +95,9 @@
                         <div>
                             <small class="text-black fw-bolder text-uppercase">Trainer</small>
                             <div class="fw-semibold text-dark">
-                                {{ $event->trainers->name }}
+                                {{ $event->trainers->pluck('name')->filter()->implode(', ') ?: '-' }}
                             </div>
+
                         </div>
                     </div>
                 </div>
