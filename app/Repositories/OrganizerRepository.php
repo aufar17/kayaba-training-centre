@@ -17,4 +17,9 @@ class OrganizerRepository implements OrganizerRepositoryInterface
     {
         return Organizer::findOrFail($id);
     }
+
+    public function getLastCode(): ?string
+    {
+        return Organizer::orderBy('id', 'desc')->value('code');
+    }
 }

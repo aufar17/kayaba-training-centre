@@ -78,4 +78,23 @@ class LocationService implements LocationServiceInterface
             throw $e;
         }
     }
+
+    public function generateNextCode(): string
+    {
+        $lastCode = $this->repository->getLastCode() ?? 'LOC0000';
+        preg_match('/LOC(\d+)/', $lastCode, $m);
+        $next = isset($m[1]) ? ((int)$m[1] + 1) : 1;
+
+        return 'LOC' . str_pad($next, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function createWithAutoCode(string $name): Location
+    {
+        return DB::transaction(function () use ($name) {
+            return Location::create([
+                'code' => $this->generateNextCode(),
+                'name' => $name,
+            ]);
+        });
+    }
 }

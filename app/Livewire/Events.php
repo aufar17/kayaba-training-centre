@@ -24,9 +24,9 @@ class Events extends Component
     public $isEditing = false;
 
     public $new_training_name, $new_training_code;
-    public $new_organizer_name, $new_organizer_code;
+    public $new_organizer_name;
     public $new_trainer_name, $new_trainer_code;
-    public $new_location_name, $new_location_code;
+    public $new_location_name;
 
     public $trainingNamePreview = '-';
     public $locationNamePreview = '-';
@@ -237,14 +237,13 @@ class Events extends Component
                 'name' => $this->new_training_name,
             ],
             'new_organizer' => [
-                'code' => $this->new_organizer_code,
                 'name' => $this->new_organizer_name,
             ],
             'new_location' => [
-                'code' => $this->new_location_code,
                 'name' => $this->new_location_name,
             ],
         ];
+
 
         $create = $this->eventService->create($data);
 
@@ -267,25 +266,43 @@ class Events extends Component
 
         $event = $this->eventService->getById($id);
 
-        if ($event) {
-            $this->code = $event->code;
-            $this->training = $event->training_id;
-            $this->location = $event->location_id;
-            $this->organizer = $event->organizer_id;
-            $this->trainer = $event->trainer_id;
-            $this->start_date = $event->start_date;
-            $this->end_date = $event->end_date;
-            $this->start_time = $event->start_time;
-            $this->end_time = $event->end_time;
-
-            $this->checkTraining();
-            $this->checkLocation();
-            $this->checkOrganizer();
-            $this->checkTrainer();
-        } else {
+        if (!$event) {
             session()->flash('error', 'Event not found.');
+            return;
         }
+
+        $this->code = $event->code;
+        $this->training = $event->training_id;
+        $this->location = $event->location_id;
+        $this->organizer = $event->organizer_id;
+        $this->start_date = $event->start_date;
+        $this->end_date = $event->end_date;
+        $this->start_time = $event->start_time;
+        $this->end_time = $event->end_time;
+
+        $trainerCodes = is_array($event->trainers)
+            ? $event->trainers
+            : json_decode($event->trainers, true);
+
+        $this->trainer = $trainerCodes ?? [];
+
+        $this->trainerNames = collect($trainerCodes)
+            ->map(function ($value) {
+                if (is_array($value)) {
+                    return $value['name'] ?? null;
+                }
+
+                return (string) $value;
+            })
+            ->filter()
+            ->values()
+            ->toArray();
+
+        $this->checkTraining();
+        $this->checkLocation();
+        $this->checkOrganizer();
     }
+
 
     public function update()
     {
@@ -296,12 +313,14 @@ class Events extends Component
             return;
         }
 
+        $trainers = $this->trainerNames ?? [];
+
         $data = [
             'code' => $this->code,
             'training' => $this->training,
             'location' => $this->location,
             'organizer' => $this->organizer,
-            'trainer' => $this->trainer,
+            'trainer' => $trainers,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'start_time' => $this->start_time,
@@ -311,19 +330,12 @@ class Events extends Component
                 'name' => $this->new_training_name,
             ],
             'new_organizer' => [
-                'code' => $this->new_organizer_code,
                 'name' => $this->new_organizer_name,
             ],
-            'new_trainer' => [
-                'code' => $this->new_trainer_code,
-                'name' => $this->new_trainer_name,
-            ],
             'new_location' => [
-                'code' => $this->new_location_code,
                 'name' => $this->new_location_name,
             ],
         ];
-
         $update = $this->eventService->update($this->eventId, $data);
 
         if ($update) {

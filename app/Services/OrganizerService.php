@@ -76,4 +76,23 @@ class OrganizerService implements OrganizerServiceInterface
             throw $e;
         }
     }
+
+    public function generateNextCode(): string
+    {
+        $lastCode = $this->repository->getLastCode() ?? 'ORG00';
+        preg_match('/ORG(\d+)/', $lastCode, $m);
+        $next = isset($m[1]) ? ((int)$m[1] + 1) : 1;
+
+        return 'ORG' . str_pad($next, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function createWithAutoCode(string $name): Organizer
+    {
+        return DB::transaction(function () use ($name) {
+            return Organizer::create([
+                'code' => $this->generateNextCode(),
+                'name' => $name,
+            ]);
+        });
+    }
 }

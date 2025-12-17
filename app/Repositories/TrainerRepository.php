@@ -17,4 +17,17 @@ class TrainerRepository implements TrainerRepositoryInterface
     {
         return Trainer::findOrFail($id);
     }
+
+    public function findByName(string $name): ?Trainer
+    {
+        return Trainer::whereRaw(
+            'LOWER(name) = ?',
+            [strtolower(trim($name))]
+        )->first();
+    }
+
+    public function getLastTrainer(): ?Trainer
+    {
+        return Trainer::orderBy('id', 'desc')->first();
+    }
 }
