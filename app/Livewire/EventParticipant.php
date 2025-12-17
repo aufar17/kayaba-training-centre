@@ -15,6 +15,7 @@ class EventParticipant extends Component
     public $user;
     public $npk;
     public $role;
+    public $notes;
     public $selectedId;
     public $registerNotif;
     public $deptApprovalNotif;
@@ -26,6 +27,7 @@ class EventParticipant extends Component
     public $countLabels = [];
     public $searchResults = [];
     public $selectedParticipants = [];
+
     protected EventServiceInterface $service;
     public function mount()
     {
@@ -421,7 +423,8 @@ class EventParticipant extends Component
         $service = $this->service ?? app(EventServiceInterface::class);
         $data = [
             'id' => $participantId,
-            'completed' => -1
+            'completed' => -1,
+            'notes' => $this->notes
         ];
         $service->completedParticipant($data);
 

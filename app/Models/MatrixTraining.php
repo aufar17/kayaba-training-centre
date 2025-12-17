@@ -10,7 +10,7 @@ class MatrixTraining extends Model
     protected $connection = 'mysql';
     protected $table = 'matrix_trainings';
     protected $fillable = [
-        'training_code',
+        'training_id',
         'dept'
     ];
 
@@ -20,6 +20,6 @@ class MatrixTraining extends Model
     }
     public function trainings(): BelongsTo
     {
-        return $this->belongsTo(Training::class, 'training_code', 'code');
+        return $this->belongsTo(Training::class, 'training_id', 'code');
     }
 }

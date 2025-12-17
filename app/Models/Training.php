@@ -23,9 +23,9 @@ class Training extends Model
     {
         return $this->hasMany(Event::class, 'id', 'training_id');
     }
-
+    
     public function matrix(): HasMany
     {
-        return $this->hasMany(MatrixTraining::class, 'training_code', 'code');
+        return $this->hasMany(MatrixTraining::class, 'training_id', 'code');
     }
 }

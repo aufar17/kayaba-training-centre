@@ -23,7 +23,7 @@ class Events extends Component
     public $eventId;
     public $isEditing = false;
 
-    public $new_training_name, $new_training_code;
+    public $new_training_name, $new_training_id;
     public $new_organizer_name;
     public $new_trainer_name, $new_trainer_code;
     public $new_location_name;
@@ -233,7 +233,7 @@ class Events extends Component
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
             'new_training' => [
-                'code' => $this->new_training_code,
+                'code' => $this->new_training_id,
                 'name' => $this->new_training_name,
             ],
             'new_organizer' => [
@@ -326,7 +326,7 @@ class Events extends Component
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
             'new_training' => [
-                'code' => $this->new_training_code,
+                'code' => $this->new_training_id,
                 'name' => $this->new_training_name,
             ],
             'new_organizer' => [

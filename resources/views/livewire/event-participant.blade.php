@@ -272,10 +272,12 @@
                                 wire:click="setCompleted('{{ $participant->id }}')">
                                 <i class="fa-solid fa-check fs-6"></i>
                             </button>
-                            <button class="badge bg-gradient-danger border-0 shadow-lg"
-                                wire:click="setNotCompleted('{{ $participant->id }}')">
+                            <button class="badge bg-gradient-danger border-0 shadow-lg" data-bs-toggle="modal"
+                                data-bs-target="#notCompletedModal{{ $participant->id }}">
                                 <i class="fa-solid fa-xmark fs-6"></i>
                             </button>
+
+
                             @else
                             <span class="badge bg-gradient-info px-3 py-2">Waiting Report</span>
                             @endif
@@ -287,6 +289,38 @@
                         </td>
                         @endif
                     </tr>
+
+                    <div class="modal fade" id="notCompletedModal{{ $participant->id }}" tabindex="-1"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content shadow-lg">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmation</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-control" cols="30" rows="3" wire:model="notes"
+                                        placeholder="Enter notes for this participant"></textarea>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-danger"
+                                        wire:click="setNotCompleted({{ $participant->id }})">
+                                        Yes, Continue
+                                    </button>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
                     @empty
                     @endforelse
                 </tbody>
@@ -433,6 +467,36 @@
                 </div>
             </div>
         </div>
+
+        <div wire:ignore.self class="modal fade" id="notCompletedModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        Are you sure you want to mark this participant as
+                        <b>Not Completed</b>?
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="button" class="btn btn-danger" wire:click="setNotCompleted"
+                            data-bs-dismiss="modal">
+                            Yes, Continue
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
     </x-card>
     <script>
         const input = document.getElementById('searchParticipant');

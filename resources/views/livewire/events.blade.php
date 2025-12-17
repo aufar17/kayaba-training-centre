@@ -100,7 +100,7 @@
 
                                         @if($showTrainingInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_training_code"
+                                            <input type="text" wire:model.live="new_training_id"
                                                 class="form-control mb-2" placeholder="Enter new training code"
                                                 oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_training_name" class="form-control"
@@ -378,7 +378,7 @@
 
                                         @if($showTrainingInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_training_code"
+                                            <input type="text" wire:model.live="new_training_id"
                                                 class="form-control mb-2" placeholder="Enter new training code"
                                                 oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_training_name" class="form-control"

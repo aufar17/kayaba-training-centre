@@ -6,6 +6,7 @@ use App\Interfaces\RepositoryInterface\EventRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Interfaces\ServiceInterface\LocationServiceInterface;
+use App\Interfaces\ServiceInterface\NotificationServiceInterface;
 use App\Interfaces\ServiceInterface\OrganizerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
@@ -30,19 +31,22 @@ class EventService implements EventServiceInterface
     protected OrganizerServiceInterface $organizerService;
     protected TrainerServiceInterface $trainerService;
     protected LocationServiceInterface $locationService;
+    protected NotificationServiceInterface $notificationService;
 
     public function __construct(
         EventRepositoryInterface $repository,
         TrainingServiceInterface $trainingService,
         OrganizerServiceInterface $organizerService,
         TrainerServiceInterface $trainerService,
-        LocationServiceInterface $locationService
+        LocationServiceInterface $locationService,
+        NotificationServiceInterface $notificationService
     ) {
         $this->repository = $repository;
         $this->trainingService = $trainingService;
         $this->organizerService = $organizerService;
         $this->trainerService = $trainerService;
         $this->locationService = $locationService;
+        $this->notificationService = $notificationService;
     }
 
     public function getAll(): Collection
@@ -152,7 +156,7 @@ class EventService implements EventServiceInterface
                 ]);
             }
 
-            $targets = MatrixTraining::where('training_code', $event->trainings->code)->get();
+            $targets = MatrixTraining::where('training_id', $event->trainings->code)->get();
 
             $notification = Notification::create([
                 'event_id' => $event->code,
@@ -226,6 +230,7 @@ class EventService implements EventServiceInterface
             }
 
             $event = Event::findOrFail($id);
+            $oldTrainingId = $event->training_id;
 
             $event->update([
                 'code' => $data['code'] ?? $event->code,
@@ -252,7 +257,7 @@ class EventService implements EventServiceInterface
                 }
 
                 $trainer = $this->trainerService->findOrCreateByName($trainerName);
-                    $incomingTrainerCodes[] = $trainer->code;
+                $incomingTrainerCodes[] = $trainer->code;
             }
 
             $incomingTrainerCodes = array_values(array_unique($incomingTrainerCodes));
@@ -273,6 +278,37 @@ class EventService implements EventServiceInterface
                         'event_id' => $event->code,
                         'trainer_id' => $trainerCode,
                     ]);
+                }
+            }
+            $notification = $this->notificationService->getById($id);
+
+            if ($notification) {
+
+                $notification->update([
+                    'title' => 'New Training Event Has Been Updated',
+                    'description' =>
+                    'A new training event titled <b>"' . $event->trainings->name . '"</b> has been updated.'
+                ]);
+
+                if ($oldTrainingId !== $event->training_id) {
+
+                    NotificationTransaction::where(
+                        'notification_id',
+                        $notification->id
+                    )->delete();
+
+                    $matrixUsers = MatrixTraining::where(
+                        'training_id',
+                        $event->training_id
+                    )->get();
+
+                    foreach ($matrixUsers as $matrix) {
+                        NotificationTransaction::create([
+                            'notification_id' => $notification->id,
+                            'target' => $matrix->dept,
+                            'is_read' => 0,
+                        ]);
+                    }
                 }
             }
 
@@ -519,6 +555,7 @@ class EventService implements EventServiceInterface
 
             $participant->update([
                 'completed' => $data['completed'],
+                'notes' => $data['notes'] ?? null
             ]);
             DB::commit();
         } catch (\Throwable $e) {

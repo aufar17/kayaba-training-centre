@@ -49,7 +49,7 @@ class TrainingService implements TrainingServiceInterface
                 $matrixData = [];
                 foreach ($data['departments'] as $dept) {
                     $matrixData[] = [
-                        'training_code' => $training->code,
+                        'training_id' => $training->code,
                         'dept' => $dept,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -58,7 +58,7 @@ class TrainingService implements TrainingServiceInterface
 
                 MatrixTraining::upsert(
                     $matrixData,
-                    ['training_code', 'dept'],
+                    ['training_id', 'dept'],
                     ['updated_at']
                 );
             }
