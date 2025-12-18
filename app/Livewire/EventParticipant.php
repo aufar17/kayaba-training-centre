@@ -13,7 +13,8 @@ class EventParticipant extends Component
 {
     public $id;
     public $user;
-    public $npk;
+    public $npkSpv = '';
+    public $npkHrd = '';
     public $role;
     public $notes;
     public $selectedId;
@@ -25,8 +26,13 @@ class EventParticipant extends Component
     public $participants = [];
     public $counts = [];
     public $countLabels = [];
-    public $searchResults = [];
-    public $selectedParticipants = [];
+
+    public $searchSpvResults = [];
+    public $selectedUserbyDept = [];
+    public ?array $selectedParticipantsSpv = null;
+
+    public $searchHrdResults = [];
+    public array $selectedParticipantsHrd = [];
 
     protected EventServiceInterface $service;
     public function mount()
@@ -92,7 +98,6 @@ class EventParticipant extends Component
         return $listUser;
     }
 
-
     public function getParticipants()
     {
         $service = $this->service ?? app(EventServiceInterface::class);
@@ -105,40 +110,117 @@ class EventParticipant extends Component
         }
         return $participants;
     }
-    public function searchNpk()
+    public function searchNpk(string $context)
     {
-        if (strlen($this->npk) < 2) {
-            $this->searchResults = [];
+        if ($context === 'spv') {
+            $this->searchNpkSpv();
             return;
         }
 
-        $eventCode = Event::where('id', $this->id)->value('code');
+        if ($context === 'hrd') {
+            $this->searchNpkHrd();
+            return;
+        }
+    }
+
+    private function conflictEvent($selectedParticipants)
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $event = $service->getById($this->id);
+
+        $eventCode = $event->code;
 
         $registeredNpks = EventTransaction::where('event_id', $eventCode)
             ->pluck('npk')
             ->toArray();
 
-        $tempSelected = collect($this->selectedParticipants)
+        $tempSelected = collect($selectedParticipants)
             ->pluck('npk')
             ->toArray();
 
-        $excludeNpks = array_unique(array_merge($registeredNpks, $tempSelected));
+        $conflictingEventCodes = Event::where('id', '!=', $event->id)
+            ->where(function ($q) use ($event) {
+                $q->where('start_date', '<=', $event->end_date)
+                    ->where('end_date', '>=', $event->start_date);
+            })
+            ->pluck('code')
+            ->toArray();
 
-        $this->searchResults = CTUser::query()
+        $conflictingNpks = EventTransaction::whereIn('event_id', $conflictingEventCodes)
+            ->pluck('npk')
+            ->toArray();
+
+        $excludeNpks = array_unique(array_merge(
+            $registeredNpks,
+            $tempSelected,
+            $conflictingNpks
+        ));
+
+        return $excludeNpks;
+    }
+
+    private function searchNpkSpv()
+    {
+        if (strlen($this->npkSpv) < 2) {
+            $this->searchSpvResults = [];
+            return;
+        }
+
+        $excludeNpks = $this->conflictEvent($this->selectedParticipantsSpv);
+
+        $this->searchSpvResults = CTUser::query()
+            ->where('dept', $this->user->dept)
             ->where(function ($q) {
-                $q->where('npk', 'like', '%' . $this->npk . '%')
-                    ->orWhere('full_name', 'like', '%' . $this->npk . '%');
+                $q->where('npk', 'like', '%' . $this->npkSpv . '%')
+                    ->orWhere('full_name', 'like', '%' . $this->npkSpv . '%');
             })
             ->whereNotIn('npk', $excludeNpks)
             ->limit(10)
             ->get(['npk', 'full_name']);
     }
 
-
-
-    public function updatedNpk()
+    private function searchNpkHrd()
     {
-        $this->searchNpk();
+        if (strlen($this->npkHrd) < 2) {
+            $this->searchHrdResults = [];
+            return;
+        }
+
+        $excludeNpks = $this->conflictEvent($this->selectedParticipantsHrd);
+
+        $this->searchHrdResults = CTUser::where(function ($q) {
+            $q->where('npk', 'like', "%{$this->npkHrd}%")
+                ->orWhere('full_name', 'like', "%{$this->npkHrd}%");
+        })
+            ->whereNotIn('npk', $excludeNpks)
+            ->limit(10)
+            ->get();
+    }
+
+    public function updatedNpkSpv()
+    {
+        if ($this->selectedParticipantsSpv) {
+            return;
+        }
+
+        $this->searchNpk('spv');
+    }
+
+    public function updatedNpkHrd()
+    {
+        $this->searchNpk('hrd');
+    }
+
+    public function selectUserbyDept($npk, $name)
+    {
+        $this->selectedParticipantsSpv = [
+            'npk' => $npk,
+            'full_name' => $name,
+        ];
+
+        $this->npkSpv = "{$npk} — {$name}";
+
+        $this->searchSpvResults = [];
     }
 
     public function addParticipantByHrd($npk)
@@ -149,25 +231,25 @@ class EventParticipant extends Component
             return;
         }
 
-        if (!collect($this->selectedParticipants)->contains('npk', $participant->npk)) {
-            $this->selectedParticipants[] = [
+        if (!collect($this->selectedParticipantsHrd)->contains('npk', $participant->npk)) {
+            $this->selectedParticipantsHrd[] = [
                 'npk' => $participant->npk,
                 'full_name' => $participant->full_name
             ];
         }
 
-        $this->npk = '';
-        $this->searchResults = [];
+        $this->npkHrd = '';
+        $this->searchHrdResults = [];
     }
 
     public function removeSelected($npk)
     {
-        $this->selectedParticipants = array_filter(
-            $this->selectedParticipants,
+        $this->selectedParticipantsHrd = array_filter(
+            $this->selectedParticipantsHrd,
             fn($item) => $item['npk'] !== $npk
         );
 
-        $this->selectedParticipants = array_values($this->selectedParticipants);
+        $this->selectedParticipantsHrd = array_values($this->selectedParticipantsHrd);
     }
 
     public function register()
@@ -177,12 +259,16 @@ class EventParticipant extends Component
             return;
         }
 
+        if (!$this->selectedParticipantsSpv) {
+            $this->addError('npkSpv', 'Please select participant');
+            return;
+        }
+
         $service = $this->service ?? app(EventServiceInterface::class);
         $data = [
             'event_id' => $this->id,
-            'npk' => $this->npk
+            'npk' => $this->selectedParticipantsSpv['npk'],
         ];
-
         $result = $service->registerParticipant($data);
 
         if ($result) {
@@ -196,7 +282,7 @@ class EventParticipant extends Component
 
     public function registerParticipantbyHrd()
     {
-        if (empty($this->selectedParticipants)) {
+        if (empty($this->selectedParticipantsHrd)) {
             session()->flash('error', 'Belum ada peserta yang dipilih.');
             return;
         }
@@ -205,16 +291,16 @@ class EventParticipant extends Component
 
         $service = $this->service ?? app(EventServiceInterface::class);
 
-        $result = $service->registerParticipantbyHrd($code, $this->selectedParticipants);
+        $result = $service->registerParticipantbyHrd($code, $this->selectedParticipantsHrd);
 
         if (!$result) {
             session()->flash('error', 'Failed to add participants. Please try again.');
             return;
         }
 
-        $this->npk = '';
-        $this->searchResults = [];
-        $this->selectedParticipants = [];
+        $this->npkHrd = '';
+        $this->searchHrdResults = [];
+        $this->selectedParticipantsHrd = [];
 
         session()->flash('success', 'Participants added successfully!');
         return redirect()->route('event-participant', ['id' => $this->id]);

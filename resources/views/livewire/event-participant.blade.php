@@ -146,27 +146,51 @@
         @if ($this->role == 'spv' && $event->status == 'upcoming')
         <form class="mb-4" wire:submit.prevent="register">
             <div class="mb-3 position-relative">
-                <label for="searchParticipant" class="form-label fw-bolder text-uppercase">Search Participant</label>
-                <input type="text" id="searchParticipant" placeholder="Enter NPK or Name" class="form-control shadow-sm"
-                    autocomplete="off">
+                <label class="form-label fw-bolder text-uppercase">Search Participant</label>
 
-                <ul id="suggestionList" class="list-group position-absolute shadow w-100"
-                    style="z-index:1000; display:none;">
-                    @foreach($users as $user)
-                    <li class="list-group-item list-group-item-action" style="cursor: pointer"
-                        data-npk="{{ $user->npk }}" data-name="{{ $user->full_name }}">
-                        {{ $user->npk }} - {{ $user->full_name }}
+                <input type="text" wire:model.live="npkSpv" placeholder="Enter NPK or Name"
+                    class="form-control shadow-sm" autocomplete="off" @if($selectedParticipantsSpv) readonly @endif>
+
+                <div wire:loading wire:target="npkSpv"
+                    class="position-absolute bg-white border rounded w-100 px-3 py-2 text-muted small"
+                    style="z-index: 1050;">
+                    Searching...
+                </div>
+
+                @if(
+                is_null($selectedParticipantsSpv) &&
+                strlen($npkSpv) >= 2 &&
+                count($searchSpvResults) > 0
+                )
+                <ul class="list-group position-absolute w-100 shadow-sm"
+                    style="z-index: 1040; max-height: 240px; overflow-y: auto;">
+                    @foreach($searchSpvResults as $result)
+                    <li class="list-group-item list-group-item-action" style="cursor: pointer;"
+                        wire:click="selectUserbyDept('{{ $result['npk'] }}', '{{ $result['full_name'] }}')">
+                        <strong>{{ $result['npk'] }}</strong>
+                        <small class="text-muted">— {{ $result['full_name'] }}</small>
                     </li>
                     @endforeach
                 </ul>
-            </div>
+                @endif
 
-            <input type="hidden" id="selectedNpk" wire:model="npk">
+                @if(
+                is_null($selectedParticipantsSpv) &&
+                strlen($npkSpv) >= 2 &&
+                count($searchSpvResults) === 0
+                )
+                <div class="position-absolute bg-white border rounded w-100 px-3 py-2 text-muted small"
+                    style="z-index: 1040;">
+                    No participant found
+                </div>
+                @endif
+            </div>
 
             <button type="submit" class="btn btn-success">
                 <i class="fa-solid fa-cash-register me-1"></i> Register
             </button>
         </form>
+
 
         <hr class="mt-3 mb-5">
         @endif
@@ -282,9 +306,11 @@
                             <span class="badge bg-gradient-info px-3 py-2">Waiting Report</span>
                             @endif
                             @else
-                            <span class="badge {{ $completed['class'] }} px-3 py-2">
+                            <span class="badge {{ $completed['class'] }} px-3 py-2" data-bs-toggle="tooltip"
+                                data-bs-placement="top" title="{{ $participant->notes }}">
                                 {{ $completed['text'] }}
                             </span>
+
                             @endif
                         </td>
                         @endif
@@ -296,7 +322,7 @@
                             <div class="modal-content shadow-lg">
 
                                 <div class="modal-header">
-                                    <h5 class="modal-title">Confirmation</h5>
+                                    <h5 class="modal-title">Not Completed Training Confirmation</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
 
@@ -310,7 +336,7 @@
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                         Cancel
                                     </button>
-                                    <button type="button" class="btn btn-danger"
+                                    <button type="button" class="btn btn-success"
                                         wire:click="setNotCompleted({{ $participant->id }})">
                                         Yes, Continue
                                     </button>
@@ -344,17 +370,17 @@
                         <div class="mb-3 position-relative">
                             <label class="form-label fw-bold">NPK</label>
 
-                            <input type="text" class="form-control" wire:model.live="npk" autocomplete="off"
+                            <input type="text" class="form-control" wire:model.live="npkHrd" autocomplete="off"
                                 placeholder="Search NPK or name employee">
 
-                            @error('npk')
+                            @error('npkHrd')
                             <small class="text-danger">{{ $message }}</small>
                             @enderror
 
-                            @if (!empty($searchResults))
+                            @if (!empty($searchHrdResults))
                             <ul class="list-group position-absolute w-100 mt-1 shadow-sm"
                                 style="z-index: 1100; max-height: 200px; overflow-y: auto;">
-                                @foreach ($searchResults as $result)
+                                @foreach ($searchHrdResults as $result)
                                 <li class="list-group-item list-group-item-action" style="cursor: pointer;"
                                     wire:click="addParticipantByHrd('{{ $result->npk }}')">
                                     <strong>{{ $result->npk }}</strong> — {{ $result->full_name }}
@@ -364,12 +390,12 @@
                             @endif
                         </div>
 
-                        @if (!empty($selectedParticipants))
+                        @if (!empty($selectedParticipantsHrd))
                         <div class="mt-3">
                             <label class="fw-bold mb-2">Selected Participants</label>
 
                             <ul class="list-group">
-                                @foreach ($selectedParticipants as $participant)
+                                @foreach ($selectedParticipantsHrd as $participant)
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ $participant['npk'] }} - {{ $participant['full_name'] }}
 
@@ -468,74 +494,57 @@
             </div>
         </div>
 
-        <div wire:ignore.self class="modal fade" id="notCompletedModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content shadow-lg">
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirmation</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        Are you sure you want to mark this participant as
-                        <b>Not Completed</b>?
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            Cancel
-                        </button>
-
-                        <button type="button" class="btn btn-danger" wire:click="setNotCompleted"
-                            data-bs-dismiss="modal">
-                            Yes, Continue
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
 
     </x-card>
     <script>
         const input = document.getElementById('searchParticipant');
-    const list = document.getElementById('suggestionList');
-    const hiddenInput = document.getElementById('selectedNpk');
+        const list = document.getElementById('suggestionList');
+        const hiddenInput = document.getElementById('selectedNpk');
 
-    input.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
-        let hasMatch = false;
-        list.style.display = 'block';
+        input.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            let hasMatch = false;
+            list.style.display = 'block';
+            Array.from(list.children).forEach(li => {
+                const name = li.dataset.name.toLowerCase();
+                const npk = li.dataset.npk.toLowerCase();
+                if(name.includes(query) || npk.includes(query)) {
+                    li.style.display = 'block';
+                    hasMatch = true;
+                } else {
+                    li.style.display = 'none';
+                }
+            });
+            if(!hasMatch) list.style.display = 'none';
+        });
+
         Array.from(list.children).forEach(li => {
-            const name = li.dataset.name.toLowerCase();
-            const npk = li.dataset.npk.toLowerCase();
-            if(name.includes(query) || npk.includes(query)) {
-                li.style.display = 'block';
-                hasMatch = true;
-            } else {
-                li.style.display = 'none';
+            li.addEventListener('click', function() {
+                const npk = this.dataset.npk;
+                const name = this.dataset.name;
+                input.value = `${npk} - ${name}`; 
+                hiddenInput.value = npk; 
+                list.style.display = 'none';
+
+                hiddenInput.dispatchEvent(new Event('input'));
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if(!list.contains(e.target) && e.target !== input) {
+                list.style.display = 'none';
             }
         });
-        if(!hasMatch) list.style.display = 'none';
-    });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const tooltipTriggerList = [].slice.call(
+            document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
 
-    Array.from(list.children).forEach(li => {
-        li.addEventListener('click', function() {
-            const npk = this.dataset.npk;
-            const name = this.dataset.name;
-            input.value = `${npk} - ${name}`; 
-            hiddenInput.value = npk; 
-            list.style.display = 'none';
-
-            hiddenInput.dispatchEvent(new Event('input'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-    });
-
-    document.addEventListener('click', function(e) {
-        if(!list.contains(e.target) && e.target !== input) {
-            list.style.display = 'none';
-        }
     });
     </script>
 
