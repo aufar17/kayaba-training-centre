@@ -9,8 +9,8 @@ interface EventRepositoryInterface
 {
     public function getModel(): Builder;
 
-    public function find(int $id);
+    public function find($id);
 
-    public function participantModel(): Builder;
+    public function participantModel();
     public function filterByMatrixDepartment(string $dept): Builder;
 }

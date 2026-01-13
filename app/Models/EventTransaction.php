@@ -15,11 +15,12 @@ class EventTransaction extends Model
         'npk',
         'approval',
         'completed',
+        'notes',
     ];
 
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class, 'event_id', 'id');
+        return $this->belongsTo(Event::class, 'event_id', 'code');
     }
 
     public function user(): BelongsTo

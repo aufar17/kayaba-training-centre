@@ -4,11 +4,15 @@ namespace App\Livewire;
 
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class EventUser extends Component
 {
+    use WithPagination;
     public $eventId;
     public $user;
+
+    protected $paginationTheme = 'bootstrap';
     protected EventServiceInterface $service;
     public function mount()
     {
@@ -20,8 +24,15 @@ class EventUser extends Component
             'nowEvent' => $this->getNowEvent(),
             'upcomingEvent' => $this->getUpcomingEvent(),
             'pastEvent' => $this->getPastEvent(),
+            'role' => $this->checkRole(),
         ];
         return view('livewire.event-user', $data);
+    }
+
+    public function checkRole()
+    {
+        $role = $this->user->getUserRole();
+        return $role;
     }
 
     public function getNowEvent()

@@ -2,24 +2,31 @@
 
 namespace App\Livewire;
 
+use App\Imports\EventImport;
+use App\Interfaces\ServiceInterface\EventImportServiceInterface;
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Interfaces\ServiceInterface\LocationServiceInterface;
 use App\Interfaces\ServiceInterface\OrganizerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Events extends Component
 {
-    public $code, $training, $location, $organizer, $trainer;
+    use WithFileUploads;
+
+    public $file;
+    public $code, $training, $location, $organizer;
+    public $trainer = [];
     public $start_date, $end_date, $start_time, $end_time;
     public $eventId;
     public $isEditing = false;
 
-    public $new_training_name, $new_training_code;
-    public $new_organizer_name, $new_organizer_code;
+    public $new_training_name, $new_training_id;
+    public $new_organizer_name;
     public $new_trainer_name, $new_trainer_code;
-    public $new_location_name, $new_location_code;
+    public $new_location_name;
 
     public $trainingNamePreview = '-';
     public $locationNamePreview = '-';
@@ -32,6 +39,9 @@ class Events extends Component
     public $trainings = [];
     public $organizers = [];
     public $trainers = [];
+    public $trainerSearch;
+    public $trainerResults = [];
+    public $trainerNames = [];
     public $locations = [];
 
     protected EventServiceInterface $eventService;
@@ -39,6 +49,7 @@ class Events extends Component
     protected OrganizerServiceInterface $organizerService;
     protected TrainerServiceInterface $trainerService;
     protected LocationServiceInterface $locationService;
+    protected EventImportServiceInterface $importService;
 
     public function mount()
     {
@@ -47,6 +58,7 @@ class Events extends Component
         $this->organizerService = app(OrganizerServiceInterface::class);
         $this->trainerService = app(TrainerServiceInterface::class);
         $this->locationService = app(LocationServiceInterface::class);
+        $this->importService = app(EventImportServiceInterface::class);
 
         $this->trainings = $this->trainingService->getAll();
         $this->organizers = $this->organizerService->getAll();
@@ -56,9 +68,10 @@ class Events extends Component
 
     public function render()
     {
-        return view('livewire.events', [
+        $data = [
             'events' => $this->getEvents(),
-        ]);
+        ];
+        return view('livewire.events', $data);
     }
 
     public function getEvents()
@@ -89,7 +102,7 @@ class Events extends Component
         $this->showTrainingInput = $this->training === 'other';
         $this->trainingNamePreview = $this->training === 'other'
             ? ($this->new_training_name ?: '-')
-            : (optional(collect($this->trainings)->firstWhere('id', $this->training))->name ?? '-');
+            : (optional(collect($this->trainings)->firstWhere('code', $this->training))->name ?? '-');
     }
 
     public function checkLocation()
@@ -97,7 +110,7 @@ class Events extends Component
         $this->showLocationInput = $this->location === 'other';
         $this->locationNamePreview = $this->location === 'other'
             ? ($this->new_location_name ?: '-')
-            : (optional(collect($this->locations)->firstWhere('id', $this->location))->name ?? '-');
+            : (optional(collect($this->locations)->firstWhere('code', $this->location))->name ?? '-');
     }
 
     public function checkOrganizer()
@@ -105,16 +118,27 @@ class Events extends Component
         $this->showOrganizerInput = $this->organizer === 'other';
         $this->organizerNamePreview = $this->organizer === 'other'
             ? ($this->new_organizer_name ?: '-')
-            : (optional(collect($this->organizers)->firstWhere('id', $this->organizer))->name ?? '-');
+            : (optional(collect($this->organizers)->firstWhere('code', $this->organizer))->name ?? '-');
     }
 
     public function checkTrainer()
     {
-        $this->showTrainerInput = $this->trainer === 'other';
-        $this->trainerNamePreview = $this->trainer === 'other'
-            ? ($this->new_trainer_name ?: '-')
-            : (optional(collect($this->trainers)->firstWhere('id', $this->trainer))->name ?? '-');
+        $trainerArray = is_array($this->trainer) ? $this->trainer : [$this->trainer];
+
+        $this->showTrainerInput = in_array('other', $trainerArray);
+
+        $names = collect($trainerArray)
+            ->reject(fn($t) => $t === 'other')
+            ->map(fn($code) => optional(collect($this->trainers)->firstWhere('code', $code))->name ?? '-')
+            ->toArray();
+
+        if ($this->showTrainerInput && $this->new_trainer_name) {
+            $names[] = $this->new_trainer_name;
+        }
+
+        $this->trainerNames = $names;
     }
+
 
     public function updatedNewTrainingName($value)
     {
@@ -139,54 +163,99 @@ class Events extends Component
 
     public function updatedNewTrainerName($value)
     {
-        if ($this->trainer === 'other') {
-            $this->trainerNamePreview = $value ?: '-';
+        if (in_array('other', $this->trainer ?? [])) {
+            $this->checkTrainer();
         }
     }
+
+    public function updatedTrainerSearch($value)
+    {
+        if (strlen($value) < 2) {
+            $this->trainerResults = [];
+            return;
+        }
+
+        $this->trainerResults = collect($this->trainers)
+            ->filter(fn($t) => str_contains(strtolower($t->name), strtolower($value)))
+            ->values()
+            ->toArray();
+    }
+
+    public function selectTrainer($name)
+    {
+        if (!in_array($name, $this->trainerNames)) {
+            $this->trainerNames[] = $name;
+        }
+
+        $this->trainerSearch = '';
+        $this->trainerResults = [];
+    }
+
+
+    public function showNewTrainer()
+    {
+        $this->showTrainerInput = true;
+    }
+
+    public function addNewTrainer()
+    {
+        $name = trim($this->new_trainer_name);
+        if ($name && !in_array($name, $this->trainerNames)) {
+            $this->trainerNames[] = $name;
+        }
+
+        $this->new_trainer_name = '';
+        $this->showTrainerInput = false;
+    }
+
+    public function removeTrainer($index)
+    {
+        unset($this->trainerNames[$index]);
+        $this->trainerNames = array_values($this->trainerNames);
+    }
+
+
 
     public function create()
     {
         $this->eventService = app(EventServiceInterface::class);
+
+        $trainers = $this->trainerNames ?? [];
 
         $data = [
             'code' => $this->code,
             'training' => $this->training,
             'location' => $this->location,
             'organizer' => $this->organizer,
-            'trainer' => $this->trainer,
+            'trainer' => $trainers,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
             'new_training' => [
-                'code' => $this->new_training_code,
+                'code' => $this->new_training_id,
                 'name' => $this->new_training_name,
             ],
             'new_organizer' => [
-                'code' => $this->new_organizer_code,
                 'name' => $this->new_organizer_name,
             ],
-            'new_trainer' => [
-                'code' => $this->new_trainer_code,
-                'name' => $this->new_trainer_name,
-            ],
             'new_location' => [
-                'code' => $this->new_location_code,
                 'name' => $this->new_location_name,
             ],
         ];
+
 
         $create = $this->eventService->create($data);
 
         if ($create) {
             session()->flash('success', 'New event added successfully.');
-            $this->resetForm();
         } else {
             session()->flash('error', 'Failed to add new event.');
         }
 
         return redirect()->route('event');
     }
+
 
     public function edit($id)
     {
@@ -197,25 +266,43 @@ class Events extends Component
 
         $event = $this->eventService->getById($id);
 
-        if ($event) {
-            $this->code = $event->code;
-            $this->training = $event->training_id;
-            $this->location = $event->location_id;
-            $this->organizer = $event->organizer_id;
-            $this->trainer = $event->trainer_id;
-            $this->start_date = $event->start_date;
-            $this->end_date = $event->end_date;
-            $this->start_time = $event->start_time;
-            $this->end_time = $event->end_time;
-
-            $this->checkTraining();
-            $this->checkLocation();
-            $this->checkOrganizer();
-            $this->checkTrainer();
-        } else {
+        if (!$event) {
             session()->flash('error', 'Event not found.');
+            return;
         }
+
+        $this->code = $event->code;
+        $this->training = $event->training_id;
+        $this->location = $event->location_id;
+        $this->organizer = $event->organizer_id;
+        $this->start_date = $event->start_date;
+        $this->end_date = $event->end_date;
+        $this->start_time = $event->start_time;
+        $this->end_time = $event->end_time;
+
+        $trainerCodes = is_array($event->trainers)
+            ? $event->trainers
+            : json_decode($event->trainers, true);
+
+        $this->trainer = $trainerCodes ?? [];
+
+        $this->trainerNames = collect($trainerCodes)
+            ->map(function ($value) {
+                if (is_array($value)) {
+                    return $value['name'] ?? null;
+                }
+
+                return (string) $value;
+            })
+            ->filter()
+            ->values()
+            ->toArray();
+
+        $this->checkTraining();
+        $this->checkLocation();
+        $this->checkOrganizer();
     }
+
 
     public function update()
     {
@@ -226,34 +313,29 @@ class Events extends Component
             return;
         }
 
+        $trainers = $this->trainerNames ?? [];
+
         $data = [
             'code' => $this->code,
             'training' => $this->training,
             'location' => $this->location,
             'organizer' => $this->organizer,
-            'trainer' => $this->trainer,
+            'trainer' => $trainers,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
             'new_training' => [
-                'code' => $this->new_training_code,
+                'code' => $this->new_training_id,
                 'name' => $this->new_training_name,
             ],
             'new_organizer' => [
-                'code' => $this->new_organizer_code,
                 'name' => $this->new_organizer_name,
             ],
-            'new_trainer' => [
-                'code' => $this->new_trainer_code,
-                'name' => $this->new_trainer_name,
-            ],
             'new_location' => [
-                'code' => $this->new_location_code,
                 'name' => $this->new_location_name,
             ],
         ];
-
         $update = $this->eventService->update($this->eventId, $data);
 
         if ($update) {

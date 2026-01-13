@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('matrix_trainings', function (Blueprint $table) {
             $table->id();
-            $table->string('training_code')->index();
+            $table->string('training_id')->index();
             $table->string('dept')->index()->nullable();
             $table->timestamps();
         });

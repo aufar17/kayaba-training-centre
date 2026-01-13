@@ -6,19 +6,23 @@ use App\Interfaces\RepositoryInterface\EventRepositoryInterface;
 use App\Interfaces\RepositoryInterface\TrainingRepositoryInterface;
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Interfaces\ServiceInterface\LocationServiceInterface;
+use App\Interfaces\ServiceInterface\NotificationServiceInterface;
 use App\Interfaces\ServiceInterface\OrganizerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainerServiceInterface;
 use App\Interfaces\ServiceInterface\TrainingServiceInterface;
 use App\Models\Auth\CTUser;
 use App\Models\Event;
+use App\Models\EventTrainer;
 use App\Models\EventTransaction;
 use App\Models\MatrixTraining;
 use App\Models\Notification;
 use App\Models\NotificationTransaction;
+use App\Models\Trainer;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EventService implements EventServiceInterface
 {
@@ -27,26 +31,29 @@ class EventService implements EventServiceInterface
     protected OrganizerServiceInterface $organizerService;
     protected TrainerServiceInterface $trainerService;
     protected LocationServiceInterface $locationService;
+    protected NotificationServiceInterface $notificationService;
 
     public function __construct(
         EventRepositoryInterface $repository,
         TrainingServiceInterface $trainingService,
         OrganizerServiceInterface $organizerService,
         TrainerServiceInterface $trainerService,
-        LocationServiceInterface $locationService
+        LocationServiceInterface $locationService,
+        NotificationServiceInterface $notificationService
     ) {
         $this->repository = $repository;
         $this->trainingService = $trainingService;
         $this->organizerService = $organizerService;
         $this->trainerService = $trainerService;
         $this->locationService = $locationService;
+        $this->notificationService = $notificationService;
     }
 
     public function getAll(): Collection
     {
         return $this->repository
             ->getModel()
-            ->latest()
+            ->orderBy('code', 'desc')
             ->get();
     }
     public function getById(int $id)
@@ -76,7 +83,6 @@ class EventService implements EventServiceInterface
         DB::beginTransaction();
 
         try {
-
             if (($data['training'] ?? null) === 'other' && !empty($data['new_training']['name'])) {
                 $trainingData = [
                     'code' => $data['new_training']['code'] ?? 'TR-' . strtoupper(str()->random(4)),
@@ -88,50 +94,72 @@ class EventService implements EventServiceInterface
                 ];
 
                 $training = $this->trainingService->create($trainingData);
-                $data['training_id'] = $training->id;
+                $data['training_id'] = $training->code;
             } else {
                 $data['training_id'] = $data['training'];
             }
 
             if (($data['organizer'] ?? null) === 'other' && !empty($data['new_organizer']['name'])) {
-                $organizer = $this->organizerService->create($data['new_organizer']);
-                $data['organizer_id'] = $organizer->id;
+                $organizer = $this->organizerService
+                    ->createWithAutoCode($data['new_organizer']['name']);
+
+                $data['organizer_id'] = $organizer->code;
             } else {
                 $data['organizer_id'] = $data['organizer'];
             }
 
-            if (($data['trainer'] ?? null) === 'other' && !empty($data['new_trainer']['name'])) {
-                $trainer = $this->trainerService->create($data['new_trainer']);
-                $data['trainer_id'] = $trainer->id;
-            } else {
-                $data['trainer_id'] = $data['trainer'];
-            }
-
             if (($data['location'] ?? null) === 'other' && !empty($data['new_location']['name'])) {
-                $location = $this->locationService->create($data['new_location']);
-                $data['location_id'] = $location->id;
+                $location = $this->locationService
+                    ->createWithAutoCode($data['new_location']['name']);
+
+                $data['location_id'] = $location->code;
             } else {
                 $data['location_id'] = $data['location'];
             }
 
 
-            $create = Event::create([
+            if (empty($data['trainer'] ?? [])) {
+                session()->flash('error', 'Please select or add at least one trainer.');
+                return null;
+            }
+
+            $trainerIds = [];
+            $trainerIds = [];
+
+            foreach ($data['trainer'] ?? [] as $t) {
+                if (is_numeric($t)) {
+                    $trainerIds[] = $t;
+                    continue;
+                }
+
+                if (is_string($t)) {
+                    $trainer = $this->trainerService->findOrCreateByName($t);
+                    $trainerIds[] = $trainer->code;
+                }
+            }
+
+            $event = Event::create([
                 'code' => $data['code'],
                 'training_id' => $data['training_id'],
                 'location_id' => $data['location_id'],
                 'organizer_id' => $data['organizer_id'],
-                'trainer_id' => $data['trainer_id'],
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'],
             ]);
 
-            $event = Event::where('id', $create->id)->with(['trainings', 'locations', 'organizers', 'trainers'])->first();
-            $targets = MatrixTraining::where('training_code', $event->trainings->code)->get();
+            foreach ($trainerIds as $trainerId) {
+                EventTrainer::create([
+                    'event_id' => $event->code,
+                    'trainer_id' => $trainerId,
+                ]);
+            }
+
+            $targets = MatrixTraining::where('training_id', $event->trainings->code)->get();
 
             $notification = Notification::create([
-                'event_id' => $event->id,
+                'event_id' => $event->code,
                 'type' => 'event',
                 'title' => 'New Training Event Has Been Created',
                 'description' => 'A new training event titled  <b>"' . $event->trainings->name . '"</b> has been created and is awaiting participant registration.'
@@ -148,24 +176,26 @@ class EventService implements EventServiceInterface
                 );
             }
 
-
             DB::commit();
             return $event;
         } catch (\Throwable $e) {
             DB::rollBack();
-            dd($e);
             throw $e;
         }
     }
+
 
     public function update(int $id, array $data)
     {
         DB::beginTransaction();
 
         try {
+
             if (($data['training'] ?? null) === 'other' && !empty($data['new_training']['name'])) {
+
                 $trainingData = [
-                    'code' => $data['new_training']['code'] ?? 'TR-' . strtoupper(str()->random(4)),
+                    'code' => $data['new_training']['code']
+                        ?? 'TR-' . strtoupper(str()->random(4)),
                     'name' => $data['new_training']['name'],
                     'desc' => $data['new_training']['desc'] ?? null,
                     'purpose' => $data['new_training']['purpose'] ?? null,
@@ -174,89 +204,115 @@ class EventService implements EventServiceInterface
                 ];
 
                 $training = $this->trainingService->create($trainingData);
-                $trainingId = $training->id;
+                $data['training_id'] = $training->code;
             } else {
-                $trainingId = $data['training'] ?? null;
+                $data['training_id'] = $data['training'] ?? null;
             }
 
             if (($data['organizer'] ?? null) === 'other' && !empty($data['new_organizer']['name'])) {
-                $organizerData = [
-                    'code' => $data['new_organizer']['code'] ?? 'ORG-' . strtoupper(str()->random(4)),
-                    'name' => $data['new_organizer']['name'],
-                ];
 
-                $organizer = $this->organizerService->create($organizerData);
-                $organizerId = $organizer->id;
+                $organizer = $this->organizerService
+                    ->createWithAutoCode($data['new_organizer']['name']);
+
+                $data['organizer_id'] = $organizer->code;
             } else {
-                $organizerId = $data['organizer'] ?? null;
-            }
-
-            if (($data['trainer'] ?? null) === 'other' && !empty($data['new_trainer']['name'])) {
-                $trainerData = [
-                    'code' => $data['new_trainer']['code'] ?? 'TRN-' . strtoupper(str()->random(4)),
-                    'name' => $data['new_trainer']['name'],
-                ];
-
-                $trainer = $this->trainerService->create($trainerData);
-                $trainerId = $trainer->id;
-            } else {
-                $trainerId = $data['trainer'] ?? null;
+                $data['organizer_id'] = $data['organizer'] ?? null;
             }
 
             if (($data['location'] ?? null) === 'other' && !empty($data['new_location']['name'])) {
-                $locationData = [
-                    'code' => $data['new_location']['code'] ?? 'LOC-' . strtoupper(str()->random(4)),
-                    'name' => $data['new_location']['name'],
-                ];
 
-                $location = $this->locationService->create($locationData);
-                $locationId = $location->id;
+                $location = $this->locationService
+                    ->createWithAutoCode($data['new_location']['name']);
+
+                $data['location_id'] = $location->code;
             } else {
-                $locationId = $data['location'] ?? null;
+                $data['location_id'] = $data['location'] ?? null;
             }
 
             $event = Event::findOrFail($id);
+            $oldTrainingId = $event->training_id;
+
             $event->update([
                 'code' => $data['code'] ?? $event->code,
-                'training_id' => $trainingId,
-                'organizer_id' => $organizerId,
-                'trainer_id' => $trainerId,
-                'location_id' => $locationId,
+                'training_id' => $data['training_id'] ?? $event->training_id,
+                'organizer_id' => $data['organizer_id'] ?? $event->organizer_id,
+                'location_id' => $data['location_id'] ?? $event->location_id,
                 'start_date' => $data['start_date'] ?? $event->start_date,
                 'end_date' => $data['end_date'] ?? $event->end_date,
                 'start_time' => $data['start_time'] ?? $event->start_time,
                 'end_time' => $data['end_time'] ?? $event->end_time,
             ]);
 
-            $notifications = Notification::where('event_id', $event->id)->where('type', 'event')->get();
-            $departments = $event->trainings->matrix->pluck('dept')->toArray();
+            $existingTrainerCodes = EventTrainer::where('event_id', $event->code)
+                ->pluck('trainer_id')
+                ->toArray();
 
-            foreach ($notifications as $notif) {
-                $notif->update([
-                    'title' => 'Training Event Updated',
-                    'description' => 'The training event titled <b>"' . $event->trainings->name . '"</b> has been updated.',
-                ]);
+            $incomingTrainerCodes = [];
 
-                $existingTrx = $notif->transactions()->pluck('target')->toArray();
+            foreach (($data['trainer'] ?? []) as $trainerName) {
 
-                foreach ($departments as $dept) {
-                    if (!in_array($dept, $existingTrx)) {
-                        $notif->transactions()->create([
-                            'target' => $dept,
-                            'is_read' => 0,
-                        ]);
-                    } else {
-                        $notif->transactions()->where('target', $dept)->update(['is_read' => 0]);
-                    }
+                $trainerName = trim($trainerName);
+                if ($trainerName === '') {
+                    continue;
                 }
 
-                $notif->transactions()->whereNotIn('target', $departments)->delete();
+                $trainer = $this->trainerService->findOrCreateByName($trainerName);
+                $incomingTrainerCodes[] = $trainer->code;
             }
 
+            $incomingTrainerCodes = array_values(array_unique($incomingTrainerCodes));
 
+            $toInsert = array_diff($incomingTrainerCodes, $existingTrainerCodes);
+            $toDelete = array_diff($existingTrainerCodes, $incomingTrainerCodes);
+
+            if (!empty($toInsert) || !empty($toDelete)) {
+
+                if (!empty($toDelete)) {
+                    EventTrainer::where('event_id', $event->code)
+                        ->whereIn('trainer_id', $toDelete)
+                        ->delete();
+                }
+
+                foreach ($toInsert as $trainerCode) {
+                    EventTrainer::create([
+                        'event_id' => $event->code,
+                        'trainer_id' => $trainerCode,
+                    ]);
+                }
+            }
+            $notification = $this->notificationService->getById($id);
+
+            if ($notification) {
+
+                $notification->update([
+                    'title' => 'New Training Event Has Been Updated',
+                    'description' =>
+                    'A new training event titled <b>"' . $event->trainings->name . '"</b> has been updated.'
+                ]);
+
+                if ($oldTrainingId !== $event->training_id) {
+
+                    NotificationTransaction::where(
+                        'notification_id',
+                        $notification->id
+                    )->delete();
+
+                    $matrixUsers = MatrixTraining::where(
+                        'training_id',
+                        $event->training_id
+                    )->get();
+
+                    foreach ($matrixUsers as $matrix) {
+                        NotificationTransaction::create([
+                            'notification_id' => $notification->id,
+                            'target' => $matrix->dept,
+                            'is_read' => 0,
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
-
             return $event;
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -264,8 +320,6 @@ class EventService implements EventServiceInterface
             throw $e;
         }
     }
-
-
     public function delete(int $id): bool
     {
         DB::beginTransaction();
@@ -280,6 +334,30 @@ class EventService implements EventServiceInterface
             DB::rollBack();
             throw $e;
         }
+    }
+
+    public function getLatestNowEvent()
+    {
+        $today = today();
+
+        return $this->repository
+            ->getModel()
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->orderByDesc('start_date')
+            ->first();
+    }
+
+
+    public function getLatestUpcomingEvent()
+    {
+        $today = today();
+
+        return $this->repository
+            ->getModel()
+            ->whereDate('start_date', '>', $today)
+            ->orderByDesc('start_date')
+            ->first();
     }
 
     public function getNowEvent($dept)
@@ -314,18 +392,20 @@ class EventService implements EventServiceInterface
         return $this->repository
             ->filterByMatrixDepartment($dept)
             ->whereDate('end_date', '<', $today)
+
             ->orderByDesc('start_date')
-            ->get();
+            ->paginate(25);
     }
 
 
 
     public function getParticipants($id)
     {
+        $event = $this->repository->find($id);
         $query = $this->repository
             ->participantModel()
             ->with(['event', 'user'])
-            ->where('event_id', $id)
+            ->where('event_id', $event->code)
             ->where('approval', '>', 0);
 
         return $query->get();
@@ -334,10 +414,12 @@ class EventService implements EventServiceInterface
     public function getParticipantbyDept($id)
     {
         $dept = Auth::user()->dept;
+        $event = $this->repository->find($id);
+
         $participants = $this->repository
             ->participantModel()
             ->with(['event', 'user'])
-            ->where('event_id', $id)
+            ->where('event_id', $event->code)
             ->where('approval', '>=', 0)
             ->get();
 
@@ -346,11 +428,13 @@ class EventService implements EventServiceInterface
     public function getHistoryApprovalbyDept($id)
     {
         $dept = Auth::user()->dept;
+        $event = $this->repository->find($id);
+
 
         $participants = $this->repository
             ->participantModel()
             ->with(['event', 'user'])
-            ->where('event_id', $id)
+            ->where('event_id', $event->code)
             ->get();
 
         if ($dept == 'HRD') {
@@ -385,18 +469,46 @@ class EventService implements EventServiceInterface
         DB::beginTransaction();
 
         try {
-            $participant = $this->repository->participantModel()->create([
-                'event_id' => $data['event_id'],
+            $code = Event::findOrFail($data['event_id'])->code;
+            $participant = EventTransaction::create([
+                'event_id' => $code,
                 'npk' => $data['npk'],
                 'approval' => 0,
                 'completed' => 0,
             ]);
             DB::commit();
+            return $participant;
         } catch (\Throwable $e) {
             DB::rollBack();
+            dd($e);
             throw $e;
         }
     }
+
+    public function registerParticipantbyHrd($eventId, array $participants)
+    {
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($participants as $p) {
+                EventTransaction::firstOrCreate([
+                    'event_id' => $eventId,
+                    'npk' => $p['npk'],
+                ], [
+                    'approval' => 2,
+                    'completed' => 0,
+                ]);
+            }
+
+            DB::commit();
+            return true;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return false;
+        }
+    }
+
 
     public function deleteParticipant($id)
     {
@@ -443,6 +555,7 @@ class EventService implements EventServiceInterface
 
             $participant->update([
                 'completed' => $data['completed'],
+                'notes' => $data['notes'] ?? null
             ]);
             DB::commit();
         } catch (\Throwable $e) {
@@ -457,6 +570,8 @@ class EventService implements EventServiceInterface
             ->participantModel()
             ->with(['event.trainings', 'user'])
             ->where('npk', $npk)
+            ->where('approval', '=', 2)
+            ->where('completed', '=', 1)
             ->get();
     }
 
@@ -466,12 +581,13 @@ class EventService implements EventServiceInterface
 
         try {
             $event = $this->getById($id);
+
             $dept = $user->dept;
 
             $notifications = [];
 
             $notifications[] = Notification::create([
-                'event_id' => $event->id,
+                'event_id' => $event->code,
                 'type' => 'register',
                 'title' => 'New Participants Have Been Registered by Admin',
                 'description' => 'Participants for the training <b>"' . $event->trainings->name . '"</b> have been registered by the admin. Please review and provide your approval as Department Head.',
@@ -484,7 +600,7 @@ class EventService implements EventServiceInterface
             ]);
 
             $notifications[] = Notification::create([
-                'event_id' => $event->id,
+                'event_id' => $event->code,
                 'type' => 'registered_participant',
                 'title' => 'You Have Been Registered for Training',
                 'description' => 'You have been successfully registered as a participant in the training <b>"' . $event->trainings->name . '"</b>.',
@@ -512,9 +628,20 @@ class EventService implements EventServiceInterface
         try {
             $event = $this->getById($id);
 
+            $availableApproval = $event->transactions()
+                ->where('approval', 1)
+                ->pluck('npk')
+                ->unique()
+                ->values();
+
+            if ($availableApproval->isEmpty()) {
+                session()->flash('error', 'Please approve all participants please!');
+                return false;
+            }
+
 
             $notification = Notification::create([
-                'event_id' => $event->id,
+                'event_id' => $event->code,
                 'type' => 'dept_approval',
                 'title' => 'The Participants Have Been Approved by Department Head',
                 'description' => 'Participants for the training  <b>"' . $event->trainings->name . '"</b>  have been approved by the department head. Please review and provide your approval as HRD.',
@@ -534,11 +661,23 @@ class EventService implements EventServiceInterface
         try {
             $event = $this->getById($id);
 
+            $availableApproval = $event->transactions()
+                ->where('approval', 2)
+                ->pluck('npk')
+                ->unique()
+                ->values();
+
+            if ($availableApproval->isEmpty()) {
+                session()->flash('error', 'Please approve all participants please!');
+                return false;
+            }
+
             $npks = $event->transactions()
                 ->where('approval', 2)
                 ->pluck('npk')
                 ->unique()
                 ->values();
+
 
             if ($npks->isEmpty()) {
                 return false;
@@ -552,7 +691,7 @@ class EventService implements EventServiceInterface
                 ->values();
 
             $hrdApproval = Notification::create([
-                'event_id' => $event->id,
+                'event_id' => $event->code,
                 'type' => 'hrd_approval',
                 'title' => 'Final Participant List Approved',
                 'description' => 'The final participant list for the training <b>"'
@@ -560,7 +699,7 @@ class EventService implements EventServiceInterface
             ]);
 
             $fixedParticipant = Notification::create([
-                'event_id' => $event->id,
+                'event_id' => $event->code,
                 'type' => 'fixed_participant',
                 'title' => 'You Have Been Approved for Training',
                 'description' => 'You have been approved to participate in the training <b>"'
@@ -568,6 +707,8 @@ class EventService implements EventServiceInterface
             ]);
 
             $transactions = [];
+            $participantTransactions = [];
+
             foreach ($departments as $dept) {
                 $transactions[] = [
                     'notification_id' => $hrdApproval->id,
@@ -576,20 +717,17 @@ class EventService implements EventServiceInterface
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
-            }
-            if (!empty($transactions)) {
-                NotificationTransaction::insert($transactions);
-            }
-
-            $participantTransactions = [];
-            foreach ($participants as $p) {
                 $participantTransactions[] = [
                     'notification_id' => $fixedParticipant->id,
-                    'target' => $p->npk,
+                    'target' => $dept,
                     'is_read' => 0,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
+            }
+
+            if (!empty($transactions)) {
+                NotificationTransaction::insert($transactions);
             }
             if (!empty($participantTransactions)) {
                 NotificationTransaction::insert($participantTransactions);
@@ -603,8 +741,6 @@ class EventService implements EventServiceInterface
         }
     }
 
-
-
     public function reportNotification($id)
     {
         DB::beginTransaction();
@@ -612,7 +748,7 @@ class EventService implements EventServiceInterface
         try {
             $event = $this->getById($id);
 
-            $results = EventTransaction::where('event_id', $event->id)
+            $results = EventTransaction::where('event_id', $event->code)
                 ->where('approval', 2)
                 ->get();
 
@@ -620,44 +756,29 @@ class EventService implements EventServiceInterface
                 return true;
             }
 
-            $npks = $results->pluck('npk')->unique()->values();
-            $participants = CTUser::whereIn('npk', $npks)->get(['npk', 'dept']);
-            $departments = $participants->pluck('dept')->filter()->unique()->values();
-
-            $notificationIds = [];
+            $participants = CTUser::whereIn(
+                'npk',
+                $results->pluck('npk')->unique()
+            )->get(['npk', 'dept']);
 
             $reportNotif = Notification::create([
-                'event_id'    => $event->id,
+                'event_id'    => $event->code,
                 'type'        => 'report',
                 'title'       => 'Training Result Report',
                 'description' => 'HRD has submitted the result report for the training <b>"'
                     . $event->trainings->name . '"</b>.',
             ]);
 
-            $notificationIds[] = $reportNotif->id;
-
-            foreach ($results as $result) {
-                $status = $result->completed == 1 ? 'Completed' : 'Not Completed';
-
-                $type = $result->completed == 1
-                    ? 'participant_completed'
-                    : 'participant_notcompleted';
-
-                $notif = Notification::create([
-                    'event_id'    => $event->id,
-                    'type'        => $type,
-                    'title'       => 'Your Training Result Report',
-                    'description' => "Your result for the training <b>\"{$event->trainings->name}\"</b>: $status",
-                ]);
-
-                $notificationIds[] = $notif->id;
-            }
+            $deptTargets = $participants
+                ->pluck('dept')
+                ->filter()
+                ->unique()
+                ->values();
 
             $transactions = [];
-
-            foreach ($departments as $dept) {
+            foreach ($deptTargets as $dept) {
                 $transactions[] = [
-                    'notification_id' => $notificationIds[0],
+                    'notification_id' => $reportNotif->id,
                     'target'          => $dept,
                     'is_read'         => 0,
                     'created_at'      => now(),
@@ -665,24 +786,43 @@ class EventService implements EventServiceInterface
                 ];
             }
 
-            $index = 1;
-            foreach ($results as $result) {
-                $participant = $participants->where('npk', $result->npk)->first();
+            $grouped = $results->groupBy(function ($item) {
+                return $item->completed == 1 ? 'completed' : 'not_completed';
+            });
 
-                if (!$participant) {
-                    $index++;
-                    continue;
+            foreach ($grouped as $status => $items) {
+
+                $type = $status === 'completed'
+                    ? 'participant_completed'
+                    : 'participant_notcompleted';
+
+                $label = $status === 'completed'
+                    ? 'Completed'
+                    : 'Not Completed';
+
+                $notif = Notification::create([
+                    'event_id'    => $event->code,
+                    'type'        => $type,
+                    'title'       => 'Your Training Result Report',
+                    'description' => "Your result for the training <b>\"{$event->trainings->name}\"</b>: {$label}",
+                ]);
+
+                $deptTargets = $participants
+                    ->whereIn('npk', $items->pluck('npk'))
+                    ->pluck('dept')
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                foreach ($deptTargets as $dept) {
+                    $transactions[] = [
+                        'notification_id' => $notif->id,
+                        'target'          => $dept,
+                        'is_read'         => 0,
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ];
                 }
-
-                $transactions[] = [
-                    'notification_id' => $notificationIds[$index],
-                    'target'          => $participant->dept,
-                    'is_read'         => 0,
-                    'created_at'      => now(),
-                    'updated_at'      => now(),
-                ];
-
-                $index++;
             }
 
             NotificationTransaction::insert($transactions);

@@ -15,6 +15,8 @@ interface EventServiceInterface
     public function update(int $id, array $data);
 
     public function delete(int $id): bool;
+    public function getLatestNowEvent();
+    public function getLatestUpcomingEvent();
     public function getNowEvent($dept);
     public function getUpcomingEvent($dept);
     public function getPastEvent($dept);
@@ -24,6 +26,7 @@ interface EventServiceInterface
     public function countApprovalByEvent($participants);
     public function deleteParticipant($id);
     public function registerParticipant($data);
+    public function registerParticipantbyHrd($eventId, array $participants);
     public function approvalParticipant($data);
     public function completedParticipant($data);
     public function historyParticipant($npk);

@@ -30,7 +30,7 @@ class MasterTrainingImport implements OnEachRow
         $row = array_slice($row, 0, count($headings));
         $row = array_pad($row, count($headings), '');
         $row = array_combine($headings, $row);
-        
+
         $code = trim($row['kode'] ?? '');
         $name = trim($row['program_training'] ?? '');
         $golongan = trim($row['golongan'] ?? '');
@@ -64,7 +64,7 @@ class MasterTrainingImport implements OnEachRow
             $matrixData = [];
             foreach ($departments as $dept) {
                 $matrixData[] = [
-                    'training_code' => $training->code,
+                    'training_id' => $training->code,
                     'dept' => $dept,
                     'created_at' => now(),
                     'updated_at' => now()
@@ -73,7 +73,7 @@ class MasterTrainingImport implements OnEachRow
 
             MatrixTraining::upsert(
                 $matrixData,
-                ['training_code', 'dept'],
+                ['training_id', 'dept'],
                 ['updated_at']
             );
 

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventImportController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\OtpController;
@@ -27,6 +29,10 @@ Route::get('notification', [MainController::class, 'notification'])->name('notif
 Route::get('training-content/{id}', [TrainingController::class, 'trainingContent'])->name('training-content');
 Route::get('event-participant/{id}', [TrainingController::class, 'eventParticipant'])->name('event-participant');
 Route::get('participant-history/{npk}', [TrainingController::class, 'participantHistory'])->name('participant-history');
+
+
+Route::post('event-import', [EventController::class, 'eventImport'])->name('event-import');
+Route::get('presence-export/{id}', [EventController::class, 'presenceExport'])->name('presence-export');
 
 
 

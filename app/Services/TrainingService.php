@@ -42,15 +42,14 @@ class TrainingService implements TrainingServiceInterface
                 'desc' => $data['desc'],
                 'purpose' => $data['purpose'],
                 'golongan' => $data['golongan'],
-                'day_duration' => $data['day_duration'],
-                'time_duration' => $data['time_duration'],
+                'duration' => $data['duration'],
             ]);
 
             if (!empty($data['departments'])) {
                 $matrixData = [];
                 foreach ($data['departments'] as $dept) {
                     $matrixData[] = [
-                        'training_code' => $training->code,
+                        'training_id' => $training->code,
                         'dept' => $dept,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -59,7 +58,7 @@ class TrainingService implements TrainingServiceInterface
 
                 MatrixTraining::upsert(
                     $matrixData,
-                    ['training_code', 'dept'],
+                    ['training_id', 'dept'],
                     ['updated_at']
                 );
             }

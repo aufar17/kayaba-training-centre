@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('event_transactions', function (Blueprint $table) {
             $table->id();
-            $table->integer('event_id')->index();
+            $table->string('event_id')->index();
             $table->string('npk')->index();
             $table->integer('approval')->index();
             $table->integer('completed')->index();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

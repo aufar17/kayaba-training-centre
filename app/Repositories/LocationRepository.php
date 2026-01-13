@@ -17,4 +17,9 @@ class LocationRepository implements LocationRepositoryInterface
     {
         return Location::findOrFail($id);
     }
+
+    public function getLastCode(): ?string
+    {
+        return Location::orderBy('id', 'desc')->value('code');
+    }
 }

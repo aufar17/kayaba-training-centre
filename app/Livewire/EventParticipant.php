@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Interfaces\ServiceInterface\EventServiceInterface;
 use App\Models\Auth\CTUser;
+use App\Models\Event;
 use App\Models\EventTransaction;
 use App\Models\Notification;
 use Livewire\Component;
@@ -12,8 +13,10 @@ class EventParticipant extends Component
 {
     public $id;
     public $user;
-    public $npk;
+    public $npkSpv = '';
+    public $npkHrd = '';
     public $role;
+    public $notes;
     public $selectedId;
     public $registerNotif;
     public $deptApprovalNotif;
@@ -23,6 +26,14 @@ class EventParticipant extends Component
     public $participants = [];
     public $counts = [];
     public $countLabels = [];
+
+    public $searchSpvResults = [];
+    public $selectedUserbyDept = [];
+    public ?array $selectedParticipantsSpv = null;
+
+    public $searchHrdResults = [];
+    public array $selectedParticipantsHrd = [];
+
     protected EventServiceInterface $service;
     public function mount()
     {
@@ -43,6 +54,7 @@ class EventParticipant extends Component
             'histories' => $this->getHistoryApprovalbyDept($this->id),
 
         ];
+
         return view('livewire.event-participant', $data);
     }
 
@@ -86,7 +98,6 @@ class EventParticipant extends Component
         return $listUser;
     }
 
-
     public function getParticipants()
     {
         $service = $this->service ?? app(EventServiceInterface::class);
@@ -99,6 +110,147 @@ class EventParticipant extends Component
         }
         return $participants;
     }
+    public function searchNpk(string $context)
+    {
+        if ($context === 'spv') {
+            $this->searchNpkSpv();
+            return;
+        }
+
+        if ($context === 'hrd') {
+            $this->searchNpkHrd();
+            return;
+        }
+    }
+
+    private function conflictEvent($selectedParticipants)
+    {
+        $service = $this->service ?? app(EventServiceInterface::class);
+        $event = $service->getById($this->id);
+
+        $eventCode = $event->code;
+
+        $registeredNpks = EventTransaction::where('event_id', $eventCode)
+            ->pluck('npk')
+            ->toArray();
+
+        $tempSelected = collect($selectedParticipants)
+            ->pluck('npk')
+            ->toArray();
+
+        $conflictingEventCodes = Event::where('id', '!=', $event->id)
+            ->where(function ($q) use ($event) {
+                $q->where('start_date', '<=', $event->end_date)
+                    ->where('end_date', '>=', $event->start_date);
+            })
+            ->pluck('code')
+            ->toArray();
+
+        $conflictingNpks = EventTransaction::whereIn('event_id', $conflictingEventCodes)
+            ->pluck('npk')
+            ->toArray();
+
+        $excludeNpks = array_unique(array_merge(
+            $registeredNpks,
+            $tempSelected,
+            $conflictingNpks
+        ));
+
+        return $excludeNpks;
+    }
+
+    private function searchNpkSpv()
+    {
+        if (strlen($this->npkSpv) < 2) {
+            $this->searchSpvResults = [];
+            return;
+        }
+
+        $excludeNpks = $this->conflictEvent($this->selectedParticipantsSpv);
+
+        $this->searchSpvResults = CTUser::query()
+            ->where('dept', $this->user->dept)
+            ->where(function ($q) {
+                $q->where('npk', 'like', '%' . $this->npkSpv . '%')
+                    ->orWhere('full_name', 'like', '%' . $this->npkSpv . '%');
+            })
+            ->whereNotIn('npk', $excludeNpks)
+            ->limit(10)
+            ->get(['npk', 'full_name']);
+    }
+
+    private function searchNpkHrd()
+    {
+        if (strlen($this->npkHrd) < 2) {
+            $this->searchHrdResults = [];
+            return;
+        }
+
+        $excludeNpks = $this->conflictEvent($this->selectedParticipantsHrd);
+
+        $this->searchHrdResults = CTUser::where(function ($q) {
+            $q->where('npk', 'like', "%{$this->npkHrd}%")
+                ->orWhere('full_name', 'like', "%{$this->npkHrd}%");
+        })
+            ->whereNotIn('npk', $excludeNpks)
+            ->limit(10)
+            ->get();
+    }
+
+    public function updatedNpkSpv()
+    {
+        if ($this->selectedParticipantsSpv) {
+            return;
+        }
+
+        $this->searchNpk('spv');
+    }
+
+    public function updatedNpkHrd()
+    {
+        $this->searchNpk('hrd');
+    }
+
+    public function selectUserbyDept($npk, $name)
+    {
+        $this->selectedParticipantsSpv = [
+            'npk' => $npk,
+            'full_name' => $name,
+        ];
+
+        $this->npkSpv = "{$npk} — {$name}";
+
+        $this->searchSpvResults = [];
+    }
+
+    public function addParticipantByHrd($npk)
+    {
+        $participant = CTUser::where('npk', $npk)->first();
+
+        if (!$participant) {
+            return;
+        }
+
+        if (!collect($this->selectedParticipantsHrd)->contains('npk', $participant->npk)) {
+            $this->selectedParticipantsHrd[] = [
+                'npk' => $participant->npk,
+                'full_name' => $participant->full_name
+            ];
+        }
+
+        $this->npkHrd = '';
+        $this->searchHrdResults = [];
+    }
+
+    public function removeSelected($npk)
+    {
+        $this->selectedParticipantsHrd = array_filter(
+            $this->selectedParticipantsHrd,
+            fn($item) => $item['npk'] !== $npk
+        );
+
+        $this->selectedParticipantsHrd = array_values($this->selectedParticipantsHrd);
+    }
 
     public function register()
     {
@@ -107,20 +259,53 @@ class EventParticipant extends Component
             return;
         }
 
+        if (!$this->selectedParticipantsSpv) {
+            $this->addError('npkSpv', 'Please select participant');
+            return;
+        }
+
         $service = $this->service ?? app(EventServiceInterface::class);
         $data = [
             'event_id' => $this->id,
-            'npk' => $this->npk
+            'npk' => $this->selectedParticipantsSpv['npk'],
         ];
+        $result = $service->registerParticipant($data);
 
-        $service->registerParticipant($data);
-
-        $service
-            ? session()->flash('success', 'New participant added successfully.')
-            : session()->flash('error', 'Failed to add new participant. Please try again.');
+        if ($result) {
+            session()->flash('success', 'New participant added successfully.');
+        } else {
+            session()->flash('error', 'Failed to add new participant.');
+        }
 
         return redirect()->route('event-participant', ['id' => $this->id]);
     }
+
+    public function registerParticipantbyHrd()
+    {
+        if (empty($this->selectedParticipantsHrd)) {
+            session()->flash('error', 'Belum ada peserta yang dipilih.');
+            return;
+        }
+
+        $code = Event::where('id', $this->id)->value('code');
+
+        $service = $this->service ?? app(EventServiceInterface::class);
+
+        $result = $service->registerParticipantbyHrd($code, $this->selectedParticipantsHrd);
+
+        if (!$result) {
+            session()->flash('error', 'Failed to add participants. Please try again.');
+            return;
+        }
+
+        $this->npkHrd = '';
+        $this->searchHrdResults = [];
+        $this->selectedParticipantsHrd = [];
+
+        session()->flash('success', 'Participants added successfully!');
+        return redirect()->route('event-participant', ['id' => $this->id]);
+    }
+
 
 
     public function confirmDelete($id)
@@ -281,14 +466,18 @@ class EventParticipant extends Component
         $service = $this->service ?? app(EventServiceInterface::class);
         $id = $this->id;
         $user = $this->user;
+
         $notif = $service->hrdApprovalNotification($id, $user);
 
-        $notif
-            ? session()->flash('success', 'Notification sent successfully!')
-            : session()->flash('error', 'Failed to send notification. Please try again.');
+        if (!$notif) {
+            session()->flash('error', 'Mohon untuk melakukan approval terlebih dahulu.');
+            return;
+        }
 
+        session()->flash('success', 'Notification sent successfully!');
         return redirect()->route('event-participant', ['id' => $id]);
     }
+
     public function reportNotification()
     {
         $service = $this->service ?? app(EventServiceInterface::class);
@@ -320,7 +509,8 @@ class EventParticipant extends Component
         $service = $this->service ?? app(EventServiceInterface::class);
         $data = [
             'id' => $participantId,
-            'completed' => -1
+            'completed' => -1,
+            'notes' => $this->notes
         ];
         $service->completedParticipant($data);
 

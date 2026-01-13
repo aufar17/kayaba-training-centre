@@ -5,54 +5,56 @@
     @if (session('error'))
     <div class="alert alert-danger text-white fw-bold">{{ session('error') }}</div>
     @endif
-    <div class="row g-4 mb-5">
-        <div class="col-md-12">
-            <div class="card h-100 border rounded-2 shadow">
-                <div class="card-body">
-                    <h5 class="card-title fw-bolder mb-4 text-uppercase" style="letter-spacing: 2px">
-                        > {{ $training->code }} - {{$training->name?? '-' }}
-                    </h5>
+    <div class="card shadow-sm rounded-4 border-0 mb-4">
+        <div class="card-header border-0 rounded-top-4"
+            style="background: linear-gradient(135deg, #d9e9ff, #b9d7ff, #9bc5ff);">
+            <h5 class="text-uppercase text-black fw-bolder mb-0" style="letter-spacing: 2px;">
+                > {{ $training->name }}
+            </h5>
+        </div>
 
-                    <ul class="list-unstyled mb-3">
-                        <li class="mb-2 d-flex">
-                            <span class="fw-bold me-4" style="min-width: 90px;">Description</span>
-                            <span>{{ $training->desc ?? '-' }}</span>
-                        </li>
-                        <hr class="my-2">
-                        <li class="mb-2 d-flex">
-                            <span class="fw-bold me-4" style="min-width: 90px;">Purpose</span>
-                            <span>{{ $training->purpose ?? '-' }}</span>
-                        </li>
-                        <hr class="my-2">
-                        <li class="mb-2 d-flex">
-                            <span class="fw-bold me-4" style="min-width: 90px;">Duration</span>
-                            <span>{{ $training->duration ?? '-' }}</span>
-                        </li>
-                        <hr class="my-2">
-                        <li class="mb-2 d-flex">
-                            <span class="fw-bold me-3" style="min-width: 90px;">Departments</span>
-                            <span>
-                                @php
-                                $departments = $training->matrix->pluck('dept')->filter()->toArray();
-                                @endphp
-                                @if(!empty($departments))
-                                {{ implode(', ', $departments) }}
+        <div class="card-body p-4">
+            <div class="row g-4 align-items-start">
+                <div class="col-md-9">
+                    <table class="table table-borderless mb-0 small align-middle">
+                        <tr>
+                            <td class="text-bold w-20">Code</td>
+                            <td class="fw-semibold">{{ $training->code ?? '-' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-bold w-20">Description</td>
+                            <td class="fw-semibold text-wrap">{{ $training->desc ?? '-' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="text-bold w-20">Purpose</td>
+                            <td class="fw-semibold text-wrap">{{ $training->purpose ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-bold w-20">Matrix</td>
+                            <td class="fw-semibold text-wrap">
+                                @if ($training->matrix && $training->matrix->count())
+                                {{ $training->matrix->pluck('dept')->implode(', ') }}
                                 @else
-                                N/A
+                                -
                                 @endif
-                            </span>
-                        </li>
-                    </ul>
-
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-bold w-20">Golongan</td>
+                            <td class="fw-semibold text-wrap">{{ $trainings->golongan ?? '-' }}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
     @if($user->dept == 'HRD')
-    <form wire:submit.prevent="save">
+    <form wire:submit.prevent=" save">
         <div class="mb-4">
-            <span class="fw-bold text-uppercase">Upload Content</span>
+            <span class="fw-bold text-uppercase">Upload Training Content</span>
 
             <div class="border border-2 border-dashed rounded-3 text-center p-3 bg-light position-relative">
                 @if (!$pdf_file)
@@ -85,10 +87,11 @@
                 @endif
             </div>
 
-            <small class="text-danger d-block mt-2">
+            <small class="d-block mt-2 text-danger">
                 <i class="fa-solid fa-circle-info"></i>
-                Please wait until the file preview appears.
+                Please wait until the file preview appears after selecting your PDF.
             </small>
+
         </div>
 
         <div class="mt-4 text-end">
@@ -137,7 +140,8 @@
                 <div class="modal-dialog modal-fullscreen">
                     <div class="modal-content">
                         <div class="modal-header bg-light">
-                            <h5 class="modal-title" id="pdfModalLabel{{ $index }}">{{ $file->file }}</h5>
+                            <h5 class="modal-title" id="pdfModalLabel{{ $index }}">{{
+                                $file->file }}</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
@@ -155,7 +159,8 @@
                     <div class="modal-content border-0 shadow-lg rounded-3">
                         <div class="modal-header bg-danger text-white rounded-top-3">
                             <h5 class="modal-title fw-bold text-white" id="deleteFileLabel{{ $index }}">
-                                <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete File
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete
+                                File
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
@@ -163,7 +168,8 @@
 
                         <div class="modal-body text-center py-4">
                             <i class="fa-solid fa-file-pdf text-danger fs-1 mb-3"></i>
-                            <p class="fw-semibold mb-1">Are you sure you want to delete this file?</p>
+                            <p class="fw-semibold mb-1">Are you sure you want to delete this
+                                file?</p>
                             <p class="text-muted small fst-italic">{{ $file->file }}</p>
                         </div>
 

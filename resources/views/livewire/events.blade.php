@@ -5,8 +5,12 @@
         @endslot
 
         @slot('body')
-        <button class="btn btn-success border-0 mb-5" data-bs-toggle="modal" data-bs-target="#newEventModal">
+        <button class="btn btn-success border-0 mb-5 me-2" data-bs-toggle="modal" data-bs-target="#newEventModal">
             <i class="fa-solid fa-plus me-1"></i> New
+        </button>
+
+        <button class="btn btn-info border-0 mb-5" data-bs-toggle="modal" data-bs-target="#excelImportModal">
+            <i class="fa-solid fa-file-excel me-1"></i> Upload Excel
         </button>
 
         <div class="table-responsive">
@@ -28,17 +32,20 @@
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td class="text-center">{{ $event->code }}</td>
-                        <td class="text-center">{{ $event->trainings->name }}</td>
-                        <td class="text-center">{{ $event->organizers->name }}</td>
+                        <td class="text-center text-wrap">{{ $event->trainings->name }}</td>
+                        <td class="text-center">{{ $event->organizers->name ?? 'N/A' }}</td>
                         <td class="text-center">{{ $event->locations->name }}</td>
-                        <td class="text-center">{{ $event->start_date }} - {{ $event->end_date }}</td>
+                        <td class="text-center">{{ $event->startDateFormat() }} - {{ $event->endDateFormat() }}</td>
                         <td class="text-center">{{ $event->start_time }} - {{ $event->end_time }}</td>
                         <td class="text-center">
+                            <a href="{{ route('presence-export',$event->id) }}"
+                                class="badge bg-gradient-success border-0 shadow-xl">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </a>
                             <a href="{{ route('event-participant',$event->id) }}"
                                 class="badge bg-gradient-info border-0 shadow-xl">
                                 <i class="fa-solid fa-user-group"></i>
                             </a>
-
                             <button wire:click="edit({{ $event->id }})" class="badge bg-warning border-0 shadow-xl"
                                 data-bs-toggle="modal" data-bs-target="#editEventModal">
                                 <i class="fa-solid fa-edit"></i>
@@ -86,14 +93,14 @@
                                             wire:change="checkTraining">
                                             <option value="">-- Select Training --</option>
                                             @foreach($trainings as $training)
-                                            <option value="{{ $training->id }}">{{ $training->name }}</option>
+                                            <option value="{{ $training->code }}">{{ $training->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
 
                                         @if($showTrainingInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_training_code"
+                                            <input type="text" wire:model.live="new_training_id"
                                                 class="form-control mb-2" placeholder="Enter new training code"
                                                 oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_training_name" class="form-control"
@@ -104,7 +111,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-lg-4">
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="location"
                                             class="form-label fw-semibold text-uppercase">Location</label>
@@ -112,23 +119,20 @@
                                             wire:change="checkLocation">
                                             <option value="">-- Select Location --</option>
                                             @foreach($locations as $location)
-                                            <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                            <option value="{{ $location->code }}">{{ $location->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
 
                                         @if($showLocationInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_location_code"
-                                                class="form-control mb-2" placeholder="Enter new location code"
-                                                oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_location_name" class="form-control"
                                                 placeholder="Enter new location name">
                                         </div>
                                         @endif
                                     </div>
                                 </div>
-                                <div class="col-lg-4">
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="organizer"
                                             class="form-label fw-semibold text-uppercase">Organizer</label>
@@ -136,42 +140,15 @@
                                             wire:change="checkOrganizer">
                                             <option value="">-- Select Organizer --</option>
                                             @foreach($organizers as $organizer)
-                                            <option value="{{ $organizer->id }}">{{ $organizer->name }}</option>
+                                            <option value="{{ $organizer->code }}">{{ $organizer->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
 
                                         @if($showOrganizerInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_organizer_code"
-                                                class="form-control mb-2" placeholder="Enter new organizer code"
-                                                oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_organizer_name" class="form-control"
                                                 placeholder="Enter new organizer name">
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="col-lg-4">
-                                    <div class="mb-3">
-                                        <label for="trainer"
-                                            class="form-label fw-semibold text-uppercase">Trainer</label>
-                                        <select wire:model.live="trainer" id="trainer" class="form-select"
-                                            wire:change="checkTrainer">
-                                            <option value="">-- Select Trainer --</option>
-                                            @foreach($trainers as $trainer)
-                                            <option value="{{ $trainer->id }}">{{ $trainer->name }}</option>
-                                            @endforeach
-                                            <option value="other">Other...</option>
-                                        </select>
-
-                                        @if($showTrainerInput)
-                                        <div class="mt-2">
-                                            <input type="text" wire:model.live="new_trainer_code"
-                                                class="form-control mb-2" placeholder="Enter new trainer code"
-                                                oninput="this.value = this.value.toUpperCase()">
-                                            <input type="text" wire:model.live="new_trainer_name" class="form-control"
-                                                placeholder="Enter new trainer name">
                                         </div>
                                         @endif
                                     </div>
@@ -217,8 +194,44 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2 position-relative">
+                                        <div class="flex-grow-1 position-relative">
+                                            <input type="text" wire:model.live="trainerSearch"
+                                                class="form-control shadow-sm mb-2"
+                                                placeholder="Type to search trainer">
 
-                            <div class="card mt-4 border-0 shadow-lg">
+                                            @if($trainerResults)
+                                            <ul class="list-group position-absolute w-100" style="z-index:500;left:0;">
+                                                @foreach($trainerResults as $t)
+                                                <li class="list-group-item list-group-item-action"
+                                                    wire:click="selectTrainer('{{ $t['name'] }}')">
+                                                    {{ $t['name'] }}
+                                                </li>
+                                                @endforeach
+                                            </ul>
+                                            @endif
+                                        </div>
+
+                                        <button type="button" class="btn btn-md btn-warning"
+                                            wire:click="showNewTrainer">
+                                            New Trainer
+                                        </button>
+                                    </div>
+
+                                    @if($showTrainerInput)
+                                    <div class="d-flex gap-1 mt-2">
+                                        <input type="text" wire:model.live="new_trainer_name"
+                                            class="form-control shadow-sm" placeholder="Enter new trainer">
+                                        <button type="button" class="badge bg-success border-0 shadow-sm"
+                                            wire:click="addNewTrainer"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="card mt-5 border-0 shadow-lg">
                                 <div class="card-header bg-light border-bottom border border-success">
                                     <h6 class="mb-0 fw-bold text-black text-uppercase">
                                         <i class="fa-solid fa-list-check me-2"></i>Event Preview
@@ -230,7 +243,8 @@
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Event Code
+                                                <div class="fw-semibold text-secondary text-uppercase small">Event
+                                                    Code
                                                 </div>
                                                 <div class="fw-bold text-dark">{{ $code ?: '-' }}</div>
                                             </div>
@@ -238,7 +252,8 @@
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Location
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Location
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $locationNamePreview }} </div>
@@ -248,28 +263,43 @@
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Organizer
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Organizer
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $organizerNamePreview }}
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div class="col-md-3">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
                                                 <div class="fw-semibold text-secondary text-uppercase small">Trainer
                                                 </div>
                                                 <div class="fw-bold text-dark">
-                                                    {{ $trainerNamePreview }} </div>
+                                                    @if(!empty($trainerNamePreview))
+                                                    <ol class="ps-3 mb-0">
+                                                        @foreach($trainerNames as $index => $name)
+                                                        <li
+                                                            class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span>{{ $index + 1 }}. {{ $name }}</span>
+                                                            <button type="button" class="badge bg-danger border-0 ms-2"
+                                                                wire:click="removeTrainer({{ $index }})">x</button>
+                                                        </li>
+                                                        @endforeach
+                                                    </ol>
+                                                    @else
+                                                    -
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="col-md-12">
                                             <div
                                                 class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Training
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Training
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $trainingNamePreview }}
@@ -333,7 +363,6 @@
                                             oninput="this.value = this.value.toUpperCase()" required>
                                     </div>
                                 </div>
-
                                 <div class="col-lg-8">
                                     <div class="mb-3">
                                         <label for="training"
@@ -342,14 +371,14 @@
                                             wire:change="checkTraining">
                                             <option value="">-- Select Training --</option>
                                             @foreach($trainings as $training)
-                                            <option value="{{ $training->id }}">{{ $training->name }}</option>
+                                            <option value="{{ $training->code }}">{{ $training->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
 
                                         @if($showTrainingInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_training_code"
+                                            <input type="text" wire:model.live="new_training_id"
                                                 class="form-control mb-2" placeholder="Enter new training code"
                                                 oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_training_name" class="form-control"
@@ -359,9 +388,8 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="row">
-                                <div class="col-lg-4">
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="location"
                                             class="form-label fw-semibold text-uppercase">Location</label>
@@ -369,24 +397,20 @@
                                             wire:change="checkLocation">
                                             <option value="">-- Select Location --</option>
                                             @foreach($locations as $location)
-                                            <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                            <option value="{{ $location->code }}">{{ $location->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
 
                                         @if($showLocationInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_location_code"
-                                                class="form-control mb-2" placeholder="Enter new location code"
-                                                oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_location_name" class="form-control"
                                                 placeholder="Enter new location name">
                                         </div>
                                         @endif
                                     </div>
                                 </div>
-
-                                <div class="col-lg-4">
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="organizer"
                                             class="form-label fw-semibold text-uppercase">Organizer</label>
@@ -394,91 +418,99 @@
                                             wire:change="checkOrganizer">
                                             <option value="">-- Select Organizer --</option>
                                             @foreach($organizers as $organizer)
-                                            <option value="{{ $organizer->id }}">{{ $organizer->name }}</option>
+                                            <option value="{{ $organizer->code }}">{{ $organizer->name }}</option>
                                             @endforeach
                                             <option value="other">Other...</option>
                                         </select>
 
                                         @if($showOrganizerInput)
                                         <div class="mt-2">
-                                            <input type="text" wire:model.live="new_organizer_code"
-                                                class="form-control mb-2" placeholder="Enter new organizer code"
-                                                oninput="this.value = this.value.toUpperCase()">
                                             <input type="text" wire:model.live="new_organizer_name" class="form-control"
                                                 placeholder="Enter new organizer name">
                                         </div>
                                         @endif
                                     </div>
                                 </div>
-
-                                <div class="col-lg-4">
-                                    <div class="mb-3">
-                                        <label for="trainer"
-                                            class="form-label fw-semibold text-uppercase">Trainer</label>
-                                        <select wire:model.live="trainer" id="trainer" class="form-select"
-                                            wire:change="checkTrainer">
-                                            <option value="">-- Select Trainer --</option>
-                                            @foreach($trainers as $trainer)
-                                            <option value="{{ $trainer->id }}">{{ $trainer->name }}</option>
-                                            @endforeach
-                                            <option value="other">Other...</option>
-                                        </select>
-
-                                        @if($showTrainerInput)
-                                        <div class="mt-2">
-                                            <input type="text" wire:model.live="new_trainer_code"
-                                                class="form-control mb-2" placeholder="Enter new trainer code"
-                                                oninput="this.value = this.value.toUpperCase()">
-                                            <input type="text" wire:model.live="new_trainer_name" class="form-control"
-                                                placeholder="Enter new trainer name">
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
                             </div>
-
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="start_date" class="form-label text-black text-uppercase">Start
                                             Date</label>
                                         <input type="date" class="form-control shadow-sm" id="start_date"
-                                            wire:model.live="start_date" required>
+                                            wire:model.live="start_date" placeholder="Start Date"
+                                            oninput="this.value = this.value.toUpperCase()" required>
                                     </div>
                                 </div>
-
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="end_date" class="form-label text-black text-uppercase">End
                                             Date</label>
                                         <input type="date" class="form-control shadow-sm" id="end_date"
-                                            wire:model.live="end_date" required>
+                                            wire:model.live="end_date" placeholder="End Date"
+                                            oninput="this.value = this.value.toUpperCase()" required>
                                     </div>
                                 </div>
                             </div>
-
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="start_time" class="form-label text-black text-uppercase">Start
                                             Time</label>
                                         <input type="time" class="form-control shadow-sm" id="start_time"
-                                            wire:model.live="start_time" required>
+                                            wire:model.live="start_time" placeholder="Start Time"
+                                            oninput="this.value = this.value.toUpperCase()" required>
                                     </div>
                                 </div>
-
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="end_time" class="form-label text-black text-uppercase">End
                                             Time</label>
                                         <input type="time" class="form-control shadow-sm" id="end_time"
-                                            wire:model.live="end_time" required>
+                                            wire:model.live="end_time" placeholder="End Time"
+                                            oninput="this.value = this.value.toUpperCase()" required>
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2 position-relative">
+                                        <div class="flex-grow-1 position-relative">
+                                            <input type="text" wire:model.live="trainerSearch"
+                                                class="form-control shadow-sm mb-2"
+                                                placeholder="Type to search trainer">
 
-                            <div class="card mt-4 border-0 shadow-lg">
-                                <div class="card-header bg-light border-bottom border border-warning">
+                                            @if($trainerResults)
+                                            <ul class="list-group position-absolute w-100" style="z-index:500;left:0;">
+                                                @foreach($trainerResults as $t)
+                                                <li class="list-group-item list-group-item-action"
+                                                    wire:click="selectTrainer('{{ $t['name'] }}')">
+                                                    {{ $t['name'] }}
+                                                </li>
+                                                @endforeach
+                                            </ul>
+                                            @endif
+                                        </div>
+
+                                        <button type="button" class="btn btn-md btn-warning"
+                                            wire:click="showNewTrainer">
+                                            New Trainer
+                                        </button>
+                                    </div>
+
+                                    @if($showTrainerInput)
+                                    <div class="d-flex gap-1 mt-2">
+                                        <input type="text" wire:model.live="new_trainer_name"
+                                            class="form-control shadow-sm" placeholder="Enter new trainer">
+                                        <button type="button" class="badge bg-success border-0 shadow-sm"
+                                            wire:click="addNewTrainer"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="card mt-5 border-0 shadow-lg">
+                                <div class="card-header bg-light border-bottom border border-success">
                                     <h6 class="mb-0 fw-bold text-black text-uppercase">
                                         <i class="fa-solid fa-list-check me-2"></i>Event Preview
                                     </h6>
@@ -488,26 +520,29 @@
                                     <div class="row g-3">
                                         <div class="col-md-3">
                                             <div
-                                                class="p-3 bg-white border-start border-4 border-warning rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Event Code
+                                                class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
+                                                <div class="fw-semibold text-secondary text-uppercase small">Event
+                                                    Code
                                                 </div>
                                                 <div class="fw-bold text-dark">{{ $code ?: '-' }}</div>
                                             </div>
                                         </div>
                                         <div class="col-md-3">
                                             <div
-                                                class="p-3 bg-white border-start border-4 border-warning rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Location
+                                                class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Location
                                                 </div>
                                                 <div class="fw-bold text-dark">
-                                                    {{ $locationNamePreview }}
-                                                </div>
+                                                    {{ $locationNamePreview }} </div>
                                             </div>
                                         </div>
+
                                         <div class="col-md-3">
                                             <div
-                                                class="p-3 bg-white border-start border-4 border-warning rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Organizer
+                                                class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Organizer
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $organizerNamePreview }}
@@ -516,38 +551,59 @@
                                         </div>
                                         <div class="col-md-3">
                                             <div
-                                                class="p-3 bg-white border-start border-4 border-warning rounded shadow-sm h-100">
+                                                class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
                                                 <div class="fw-semibold text-secondary text-uppercase small">Trainer
                                                 </div>
                                                 <div class="fw-bold text-dark">
-                                                    {{ $trainerNamePreview }}
+                                                    @if(!empty($trainerNames) && count($trainerNames) > 0)
+                                                    <ol class="ps-3 mb-0">
+                                                        @foreach($trainerNames as $index => $name)
+                                                        <li
+                                                            class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span>{{ $index + 1 }}. {{ $name }}</span>
+                                                            <button type="button" class="badge bg-danger border-0 ms-2"
+                                                                wire:click="removeTrainer({{ $index }})">
+                                                                x
+                                                            </button>
+                                                        </li>
+                                                        @endforeach
+                                                    </ol>
+                                                    @else
+                                                    -
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div class="col-md-12">
                                             <div
-                                                class="p-3 bg-white border-start border-4 border-warning rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Training
+                                                class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
+                                                <div class="fw-semibold text-secondary text-uppercase small">
+                                                    Training
                                                 </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $trainingNamePreview }}
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div class="col-md-6">
                                             <div
-                                                class="p-3 bg-white border-start border-4 border-warning rounded shadow-sm h-100">
-                                                <div class="fw-semibold text-secondary text-uppercase small">Dates</div>
+                                                class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
+                                                <div class="fw-semibold text-secondary text-uppercase small">Dates
+                                                </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $start_date && $end_date ? "$start_date → $end_date" : '-' }}
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div class="col-md-6">
                                             <div
-                                                class="p-3 bg-white border-start border-4 border-warning rounded shadow-sm h-100">
+                                                class="p-3 bg-white border-start border-4 border-success rounded shadow-sm h-100">
                                                 <div class="fw-semibold text-secondary text-uppercase small">Time
-                                                    Duration</div>
+                                                    Duration
+                                                </div>
                                                 <div class="fw-bold text-dark">
                                                     {{ $start_time && $end_time ? "$start_time → $end_time" : '-' }}
                                                 </div>
@@ -582,6 +638,52 @@
                     <div class="modal-footer border-1">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-danger" wire:click="delete">Yes, Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="modal fade" id="excelImportModal" tabindex="-1" aria-labelledby="excelImportModalLabel"
+                aria-hidden="true" wire:ignore.self>
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 rounded-4">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold" id="excelImportModalLabel">
+                                Import Historical Training
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <form action="{{ route('event-import') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+
+                            <div class="modal-body">
+                                <label class="form-label fw-semibold">Upload History</label>
+
+                                <input type="file" name="file" class="form-control" accept=".xlsx, .xls" required>
+
+                                <div class="form-text text-info mt-1">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    Supported file types: <strong>.xlsx</strong>, <strong>.xls</strong>
+                                </div>
+
+                                @error('file')
+                                <span class="text-danger small d-block mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light border-0" data-bs-dismiss="modal">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fa-solid fa-upload me-1"></i> Import
+                                </button>
+                            </div>
+                        </form>
+
                     </div>
                 </div>
             </div>

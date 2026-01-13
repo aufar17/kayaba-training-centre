@@ -15,8 +15,7 @@ class Trainings extends Component
     public $purpose;
     public $golongan;
     public $departement;
-    public $day_duration;
-    public $time_duration;
+    public $duration;
 
     public $trainingId;
     public $departmentInputs = [];
@@ -88,8 +87,7 @@ class Trainings extends Component
             'desc' => $this->desc,
             'purpose' => $this->purpose,
             'golongan' => $this->golongan,
-            'day_duration' => $this->day_duration,
-            'time_duration' => $this->time_duration,
+            'duration' => $this->duration,
             'departments' => $this->selectedDepartments,
         ];
 
@@ -112,8 +110,7 @@ class Trainings extends Component
         $this->desc = $training->desc;
         $this->purpose = $training->purpose;
         $this->golongan = $training->golongan;
-        $this->day_duration = $training->day_duration;
-        $this->time_duration = $training->time_duration;
+        $this->duration = $training->duration;
 
         $departments = $training->matrix->pluck('dept')->toArray();
         $this->selectedDepartments = $departments;
@@ -140,8 +137,7 @@ class Trainings extends Component
             'desc' => $this->desc,
             'purpose' => $this->purpose,
             'golongan' => $this->golongan,
-            'day_duration' => $this->day_duration,
-            'time_duration' => $this->time_duration,
+            'duration' => $this->duration,
             'departments' => $this->selectedDepartments,
         ];
 
