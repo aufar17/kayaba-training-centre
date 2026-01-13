@@ -182,16 +182,16 @@ class EventImportService implements EventImportServiceInterface
                 'training_id'  => $training->code,
                 'location_id'  => 'LOC0001',
                 'organizer_id' => $organizerCode,
-                'trainer_id'   => 'TA0001',
                 'start_date'   => $startDate,
                 'end_date'     => $endDate,
             ]);
+
+
 
             if (!$event->exists) {
                 $event->code = $this->generateEventCode();
             }
 
-            // time safe update
             if ($startTime) $event->start_time = $startTime;
             if ($endTime)   $event->end_time   = $endTime;
 
