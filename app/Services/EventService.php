@@ -243,6 +243,7 @@ class EventService implements EventServiceInterface
                 'end_time' => $data['end_time'] ?? $event->end_time,
             ]);
 
+
             $existingTrainerCodes = EventTrainer::where('event_id', $event->code)
                 ->pluck('trainer_id')
                 ->toArray();
@@ -280,7 +281,7 @@ class EventService implements EventServiceInterface
                     ]);
                 }
             }
-            $notification = $this->notificationService->getById($id);
+            $notification = Notification::where('event_id', $event->code)->first();
 
             if ($notification) {
 
